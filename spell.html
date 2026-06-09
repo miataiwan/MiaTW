@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ㄅㄆㄇ拼拼看">
+<meta name="theme-color" content="#FF6B9D">
+<title>ㄅㄆㄇ拼拼看 🌟</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+:root {
+  --pink:#FF6B9D; --purple:#9B59B6; --blue:#5DADE2;
+  --yellow:#F7DC6F; --green:#58D68D; --orange:#F0A500;
+  --red:#E74C3C; --bg:#FFF5F9; --card:#FFFFFF; --text:#2C3E50; --soft:#F8E8F0;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;user-select:none;}
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* HOME */
+#home{background:linear-gradient(160deg,#FF6B9D 0%,#C850C0 50%,#4158D0 100%);align-items:center;justify-content:center;padding:24px 20px;}
+.home-hero{text-align:center;color:white;margin-bottom:32px;}
+.home-title{font-size:52px;font-weight:900;letter-spacing:8px;text-shadow:0 4px 20px rgba(0,0,0,.2);animation:bounce 2s ease-in-out infinite;display:block;}
+.home-subtitle{font-size:19px;font-weight:600;opacity:.9;margin-top:6px;}
+.stars-row{font-size:26px;margin:10px 0;animation:twinkle 1.5s ease-in-out infinite alternate;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+@keyframes twinkle{from{opacity:.7}to{opacity:1}}
+
+/* UNIT SELECTOR */
+.unit-scroll{width:100%;max-width:420px;margin-bottom:18px;}
+.unit-scroll-label{color:rgba(255,255,255,.85);font-size:13px;font-weight:700;margin-bottom:8px;text-align:center;}
+.unit-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+.unit-chip{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.45);color:white;border-radius:50px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.unit-chip.active,.unit-chip:active{background:white;color:var(–purple);}
+
+/* START BUTTON */
+.start-btn{background:white;color:var(–purple);border:none;border-radius:50px;padding:16px 52px;font-size:20px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 8px 28px rgba(0,0,0,.2);margin-top:8px;transition:transform .15s;}
+.start-btn:active{transform:scale(.96);}
+.word-count-badge{color:rgba(255,255,255,.8);font-size:13px;margin-top:10px;font-weight:600;}
+
+/* GAME HEADER */
+#game{background:var(–bg);}
+.game-header{background:white;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 12px rgba(0,0,0,.08);position:sticky;top:0;z-index:10;}
+.back-btn{width:36px;height:36px;background:var(–soft);border:none;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.progress-wrap{flex:1;}
+.progress-bar{height:10px;background:#EEE;border-radius:10px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(–pink),var(–purple));border-radius:10px;transition:width .4s ease;}
+.progress-text{font-size:11px;color:#AAA;margin-top:2px;text-align:right;}
+.score-badge{background:var(–yellow);border-radius:50px;padding:4px 12px;font-weight:800;font-size:14px;flex-shrink:0;}
+
+/* QUESTION AREA */
+.question-area{flex:1;display:flex;flex-direction:column;align-items:center;padding:16px 16px 0;}
+.q-label{background:var(–soft);color:var(–pink);border-radius:50px;padding:4px 14px;font-size:13px;font-weight:700;margin-bottom:14px;}
+.speak-card{background:white;border:3px solid var(–pink);border-radius:24px;padding:18px 28px;cursor:pointer;box-shadow:0 6px 20px rgba(255,107,157,.22);transition:transform .15s;margin-bottom:10px;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;max-width:320px;}
+.speak-card:active{transform:scale(.97);}
+.speak-card.speaking{animation:pulse .6s ease-in-out infinite alternate;border-color:var(–purple);background:var(–soft);}
+@keyframes pulse{from{box-shadow:0 6px 20px rgba(155,89,182,.3)}to{box-shadow:0 6px 40px rgba(155,89,182,.6)}}
+.speak-card .char{font-size:68px;font-weight:900;line-height:1.1;}
+.speak-card .hint-text{font-size:13px;color:#AAA;}
+.feedback-bar{font-size:15px;font-weight:700;min-height:24px;margin-bottom:4px;color:#888;}
+
+/* KEYBOARD */
+.keyboard-area{background:#EDEEF2;padding:10px 6px 28px;width:100%;}
+.input-display{background:white;border-radius:14px;padding:10px 14px;margin:0 6px 8px;font-size:30px;font-weight:800;min-height:52px;display:flex;align-items:center;gap:6px;border:3px solid #DDD;color:var(–text);transition:border-color .3s,background .3s;}
+.input-display .cursor{width:2px;height:30px;background:var(–pink);animation:blink 1s step-end infinite;flex-shrink:0;}
+@keyframes blink{50%{opacity:0}}
+.bopo-rows{display:flex;flex-direction:column;gap:5px;}
+.bopo-row{display:flex;justify-content:center;gap:4px;}
+.bopo-key{background:white;border:2px solid #CCC;border-bottom:3px solid #BBB;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 3px rgba(0,0,0,.08);transition:all .1s;font-family:inherit;color:var(–text);padding:0;width:38px;height:38px;flex-shrink:0;}
+.bopo-key:active{transform:translateY(1px);box-shadow:none;border-bottom-width:2px;background:var(–soft);}
+.bopo-key.tone-key{background:#FFF0F5;border-color:#FFB3D1;}
+.bopo-key.delete-key{background:#FFF0F5;border-color:#FFB3D1;font-size:18px;width:50px;}
+.bopo-key.submit-key{background:var(–green);border-color:#27AE60;color:white;font-size:22px;width:64px;}
+
+/* RESULT OVERLAY */
+.result-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px);}
+.result-overlay.show{display:flex;}
+.result-card{background:white;border-radius:28px;padding:34px 26px;text-align:center;max-width:320px;width:90%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.result-emoji{font-size:68px;display:block;margin-bottom:10px;}
+.result-title{font-size:26px;font-weight:900;margin-bottom:6px;}
+.result-score{font-size:17px;color:#888;margin-bottom:20px;}
+.result-stars{font-size:34px;letter-spacing:8px;margin-bottom:22px;}
+.result-btns{display:flex;flex-direction:column;gap:10px;}
+.result-btn{border:none;border-radius:50px;padding:13px 20px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;display:block;width:100%;}
+.result-btn.primary{background:linear-gradient(135deg,var(–pink),var(–purple));color:white;box-shadow:0 6px 20px rgba(255,107,157,.4);}
+.result-btn.secondary{background:var(–soft);color:var(–purple);}
+
+/* CONFETTI */
+.confetti-container{position:fixed;inset:0;pointer-events:none;z-index:200;}
+.confetti-piece{position:absolute;border-radius:2px;animation:confettiFall var(–dur) ease-in forwards;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* correct/wrong flash */
+.input-display.correct{border-color:var(–green)!important;background:#E8F8EF!important;}
+.input-display.wrong{border-color:var(–red)!important;background:#FDEDEC!important;animation:shakeInput .4s ease;}
+@keyframes shakeInput{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+</style>
+
+</head>
+<body>
+
+<!-- HOME -->
+
+<div class="screen active" id="home">
+  <div class="home-hero">
+    <span class="home-title">ㄅㄆㄇ</span>
+    <div class="stars-row">⭐🌟✨🌟⭐</div>
+    <div class="home-subtitle">拼拼看！小一注音練習</div>
+  </div>
+
+  <div class="unit-scroll">
+    <div class="unit-scroll-label">📚 選擇課次（可多選）</div>
+    <div class="unit-chips" id="unitChips"></div>
+  </div>
+
+<button class="start-btn" id="startBtn" onclick="startGame()">開始遊戲 🎮</button>
+
+  <div class="word-count-badge" id="wordCountBadge">已選 0 個字</div>
+</div>
+
+<!-- GAME -->
+
+<div class="screen" id="game">
+  <div class="game-header">
+    <button class="back-btn" id="backBtn">←</button>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-text" id="progressText">0 / 0</div>
+    </div>
+    <div class="score-badge">⭐ <span id="scoreDisplay">0</span></div>
+  </div>
+  <div class="question-area" id="questionArea"></div>
+  <div class="keyboard-area" id="keyboardArea">
+    <div class="input-display" id="inputDisplay">
+      <span id="inputText"></span><div class="cursor"></div>
+    </div>
+    <div class="bopo-rows" id="bopoRows"></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card">
+    <span class="result-emoji" id="resultEmoji">🎉</span>
+    <div class="result-title" id="resultTitle">太棒了！</div>
+    <div class="result-score" id="resultScore">答對 8 / 10 題</div>
+    <div class="result-stars" id="resultStars">⭐⭐⭐</div>
+    <div class="result-btns">
+      <button class="result-btn primary" id="resultAgainBtn">再玩一次！</button>
+      <button class="result-btn secondary" onclick="goHome()">回選課次</button>
+    </div>
+  </div>
+</div>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+// =====================================================================
+// 一年級國語生字表（翰林版＋南一版＋康軒版 共同核心字 + 課次標記）
+// 注音採教育部標準，聲調符號：ˊ=二聲 ˇ=三聲 ˋ=四聲 ˙=輕聲（一聲不標）
+// =====================================================================
+const UNITS = [
+  {
+    id: 'u1', label: '第1課', name: '小小羊',
+    words: [
+      {char:'羊', bopo:'ㄧㄤˊ'},
+      {char:'小', bopo:'ㄒㄧㄠˇ'},
+      {char:'出', bopo:'ㄔㄨ'},
+      {char:'去', bopo:'ㄑㄩˋ'},
+      {char:'高', bopo:'ㄍㄠ'},
+      {char:'大', bopo:'ㄉㄚˋ'},
+      {char:'門', bopo:'ㄇㄣˊ'},
+    ]
+  },
+  {
+    id: 'u2', label: '第2課', name: '奶奶家',
+    words: [
+      {char:'走', bopo:'ㄗㄡˇ'},
+      {char:'一', bopo:'ㄧ'},
+      {char:'起', bopo:'ㄑㄧˇ'},
+      {char:'看', bopo:'ㄎㄢˋ'},
+      {char:'見', bopo:'ㄐㄧㄢˋ'},
+      {char:'路', bopo:'ㄌㄨˋ'},
+      {char:'兔', bopo:'ㄊㄨˋ'},
+      {char:'家', bopo:'ㄐㄧㄚ'},
+    ]
+  },
+  {
+    id: 'u3', label: '第3課', name: '種花',
+    words: [
+      {char:'水', bopo:'ㄕㄨㄟˇ'},
+      {char:'長', bopo:'ㄓㄤˇ'},
+      {char:'多', bopo:'ㄉㄨㄛ'},
+      {char:'好', bopo:'ㄏㄠˇ'},
+      {char:'種', bopo:'ㄓㄨㄥˋ'},
+      {char:'花', bopo:'ㄏㄨㄚ'},
+      {char:'草', bopo:'ㄘㄠˇ'},
+    ]
+  },
+  {
+    id: 'u4', label: '第4課', name: '請問',
+    words: [
+      {char:'請', bopo:'ㄑㄧㄥˇ'},
+      {char:'問', bopo:'ㄨㄣˋ'},
+      {char:'你', bopo:'ㄋㄧˇ'},
+      {char:'有', bopo:'ㄧㄡˇ'},
+      {char:'星', bopo:'ㄒㄧㄥ'},
+      {char:'月', bopo:'ㄩㄝˋ'},
+      {char:'亮', bopo:'ㄌㄧㄤˋ'},
+    ]
+  },
+  {
+    id: 'u5', label: '第5課', name: '七彩滑梯',
+    words: [
+      {char:'能', bopo:'ㄋㄥˊ'},
+      {char:'上', bopo:'ㄕㄤˋ'},
+      {char:'下', bopo:'ㄒㄧㄚˋ'},
+      {char:'彩', bopo:'ㄘㄞˇ'},
+      {char:'七', bopo:'ㄑㄧ'},
+      {char:'紅', bopo:'ㄏㄨㄥˊ'},
+      {char:'橙', bopo:'ㄔㄥˊ'},
+      {char:'黃', bopo:'ㄏㄨㄤˊ'},
+    ]
+  },
+  {
+    id: 'u6', label: '第6課', name: '秋千',
+    words: [
+      {char:'找', bopo:'ㄓㄠˇ'},
+      {char:'天', bopo:'ㄊㄧㄢ'},
+      {char:'空', bopo:'ㄎㄨㄥ'},
+      {char:'說', bopo:'ㄕㄨㄛ'},
+      {char:'話', bopo:'ㄏㄨㄚˋ'},
+      {char:'早', bopo:'ㄗㄠˇ'},
+      {char:'白', bopo:'ㄅㄞˊ'},
+    ]
+  },
+  {
+    id: 'u7', label: '第7課', name: '回音',
+    words: [
+      {char:'也', bopo:'ㄧㄝˇ'},
+      {char:'心', bopo:'ㄒㄧㄣ'},
+      {char:'開', bopo:'ㄎㄞ'},
+      {char:'人', bopo:'ㄖㄣˊ'},
+      {char:'回', bopo:'ㄏㄨㄟˊ'},
+      {char:'音', bopo:'ㄧㄣ'},
+    ]
+  },
+  {
+    id: 'u8', label: '第8課', name: '玩沙',
+    words: [
+      {char:'沙', bopo:'ㄕㄚ'},
+      {char:'玩', bopo:'ㄨㄢˊ'},
+      {char:'做', bopo:'ㄗㄨㄛˋ'},
+      {char:'好玩', bopo:'ㄏㄠˇㄨㄢˊ'},
+      {char:'城', bopo:'ㄔㄥˊ'},
+      {char:'堡', bopo:'ㄅㄠˇ'},
+      {char:'蓋', bopo:'ㄍㄞˋ'},
+    ]
+  },
+  {
+    id: 'u9', label: '第9課', name: '小蜜蜂',
+    words: [
+      {char:'蜂', bopo:'ㄈㄥ'},
+      {char:'蜜', bopo:'ㄇㄧˋ'},
+      {char:'飛', bopo:'ㄈㄟ'},
+      {char:'花園', bopo:'ㄏㄨㄚㄩㄢˊ'},
+      {char:'採', bopo:'ㄘㄞˇ'},
+      {char:'忙', bopo:'ㄇㄤˊ'},
+    ]
+  },
+  {
+    id: 'u10', label: '第10課', name: '吃東西',
+    words: [
+      {char:'吃', bopo:'ㄔ'},
+      {char:'東', bopo:'ㄉㄨㄥ'},
+      {char:'西', bopo:'ㄒㄧ'},
+      {char:'米', bopo:'ㄇㄧˇ'},
+      {char:'飯', bopo:'ㄈㄢˋ'},
+      {char:'麵', bopo:'ㄇㄧㄢˋ'},
+      {char:'菜', bopo:'ㄘㄞˋ'},
+      {char:'湯', bopo:'ㄊㄤ'},
+    ]
+  },
+  {
+    id: 'u11', label: '第11課', name: '快樂的一天',
+    words: [
+      {char:'快', bopo:'ㄎㄨㄞˋ'},
+      {char:'樂', bopo:'ㄌㄜˋ'},
+      {char:'今', bopo:'ㄐㄧㄣ'},
+      {char:'天', bopo:'ㄊㄧㄢ'},
+      {char:'我', bopo:'ㄨㄛˇ'},
+      {char:'和', bopo:'ㄏㄜˊ'},
+      {char:'媽媽', bopo:'ㄇㄚ˙ㄇㄚ'},
+    ]
+  },
+  {
+    id: 'u12', label: '第12課', name: '日月潭',
+    words: [
+      {char:'日', bopo:'ㄖˋ'},
+      {char:'潭', bopo:'ㄊㄢˊ'},
+      {char:'美', bopo:'ㄇㄟˇ'},
+      {char:'湖', bopo:'ㄏㄨˊ'},
+      {char:'島', bopo:'ㄉㄠˇ'},
+      {char:'山', bopo:'ㄕㄢ'},
+    ]
+  },
+  {
+    id: 'u13', label: '第13課', name: '動物園',
+    words: [
+      {char:'動', bopo:'ㄉㄨㄥˋ'},
+      {char:'物', bopo:'ㄨˋ'},
+      {char:'園', bopo:'ㄩㄢˊ'},
+      {char:'獅', bopo:'ㄕ'},
+      {char:'子', bopo:'ㄗˇ'},
+      {char:'象', bopo:'ㄒㄧㄤˋ'},
+      {char:'熊', bopo:'ㄒㄩㄥˊ'},
+      {char:'猴', bopo:'ㄏㄡˊ'},
+    ]
+  },
+  {
+    id: 'u14', label: '第14課', name: '下雨了',
+    words: [
+      {char:'雨', bopo:'ㄩˇ'},
+      {char:'下', bopo:'ㄒㄧㄚˋ'},
+      {char:'傘', bopo:'ㄙㄢˇ'},
+      {char:'跳', bopo:'ㄊㄧㄠˋ'},
+      {char:'水坑', bopo:'ㄕㄨㄟˇㄎㄥ'},
+      {char:'濕', bopo:'ㄕ'},
+    ]
+  },
+  {
+    id: 'u15', label: '第15課', name: '寫字',
+    words: [
+      {char:'寫', bopo:'ㄒㄧㄝˇ'},
+      {char:'字', bopo:'ㄗˋ'},
+      {char:'筆', bopo:'ㄅㄧˇ'},
+      {char:'書', bopo:'ㄕㄨ'},
+      {char:'紙', bopo:'ㄓˇ'},
+      {char:'練', bopo:'ㄌㄧㄢˋ'},
+      {char:'習', bopo:'ㄒㄧˊ'},
+    ]
+  },
+  {
+    id: 'u16', label: '第16課', name: '好朋友',
+    words: [
+      {char:'朋', bopo:'ㄆㄥˊ'},
+      {char:'友', bopo:'ㄧㄡˇ'},
+      {char:'一起', bopo:'ㄧˋㄑㄧˇ'},
+      {char:'笑', bopo:'ㄒㄧㄠˋ'},
+      {char:'喜', bopo:'ㄒㄧˇ'},
+      {char:'分', bopo:'ㄈㄣ'},
+      {char:'享', bopo:'ㄒㄧㄤˇ'},
+    ]
+  },
+];
+
+// =====================================================================
+// Bopomofo keyboard
+// =====================================================================
+const BOPO_LAYOUT = [
+  ['ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ'],
+  ['ㄍ','ㄎ','ㄏ','ㄐ','ㄑ','ㄒ','ㄓ','ㄔ'],
+  ['ㄕ','ㄖ','ㄗ','ㄘ','ㄙ','ㄧ','ㄨ','ㄩ'],
+  ['ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ'],
+  ['ㄢ','ㄣ','ㄤ','ㄥ','ㄦ','ˊ','ˇ','ˋ','˙'],
+];
+const TONES = ['ˊ','ˇ','ˋ','˙'];
+
+// =====================================================================
+// STATE
+// =====================================================================
+let state = {
+  selectedUnits: [],
+  questions: [],
+  current: 0,
+  score: 0,
+  typed: '',
+  answered: false,
+  total: 0,
+};
+
+// =====================================================================
+// AUDIO
+// =====================================================================
+let audioCtx;
+function getACtx(){ if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function tone(freq,type,dur,vol=.28){
+  const c=getACtx(),o=c.createOscillator(),g=c.createGain();
+  o.connect(g);g.connect(c.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,c.currentTime+dur);
+  o.start();o.stop(c.currentTime+dur);
+}
+function sfxCorrect(){ tone(523,'sine',.12,.22);setTimeout(()=>tone(659,'sine',.12,.22),110);setTimeout(()=>tone(784,'sine',.28,.28),220); }
+function sfxWrong(){ tone(220,'sawtooth',.12,.2);setTimeout(()=>tone(180,'sawtooth',.22,.2),130); }
+function sfxClick(){ tone(600,'sine',.05,.12); }
+function sfxCelebrate(){ [523,659,784,1047,784,1047,1319].forEach((n,i)=>setTimeout(()=>tone(n,'sine',.18,.24),i*90)); }
+
+function speak(text,rate=.82){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='zh-TW';u.rate=rate;u.pitch=1.15;
+  window.speechSynthesis.speak(u);
+}
+
+// =====================================================================
+// HOME: build unit chips
+// =====================================================================
+function buildHome(){
+  const chips=document.getElementById('unitChips');
+  chips.innerHTML='';
+  UNITS.forEach(u=>{
+    const btn=document.createElement('button');
+    btn.className='unit-chip'+(state.selectedUnits.includes(u.id)?' active':'');
+    btn.textContent=u.label+'「'+u.name+'」';
+    btn.onclick=()=>{
+      sfxClick();
+      if(state.selectedUnits.includes(u.id)){
+        state.selectedUnits=state.selectedUnits.filter(x=>x!==u.id);
+        btn.classList.remove('active');
+      } else {
+        state.selectedUnits.push(u.id);
+        btn.classList.add('active');
+      }
+      updateWordCount();
+    };
+    chips.appendChild(btn);
+  });
+  // "all" shortcut
+  const allBtn=document.createElement('button');
+  allBtn.className='unit-chip';
+  allBtn.style.background='rgba(255,255,255,.35)';
+  allBtn.textContent='✨ 全部課次';
+  allBtn.onclick=()=>{
+    sfxClick();
+    const allIds=UNITS.map(u=>u.id);
+    const allSelected=allIds.every(id=>state.selectedUnits.includes(id));
+    if(allSelected){
+      state.selectedUnits=[];
+      chips.querySelectorAll('.unit-chip').forEach(c=>c.classList.remove('active'));
+    } else {
+      state.selectedUnits=[...allIds];
+      chips.querySelectorAll('.unit-chip').forEach(c=>c.classList.add('active'));
+    }
+    updateWordCount();
+  };
+  chips.prepend(allBtn);
+  updateWordCount();
+}
+
+function updateWordCount(){
+  const count=getSelectedWords().length;
+  document.getElementById('wordCountBadge').textContent=`已選 ${count} 個字`;
+}
+
+function getSelectedWords(){
+  if(state.selectedUnits.length===0) return UNITS.flatMap(u=>u.words);
+  return UNITS.filter(u=>state.selectedUnits.includes(u.id)).flatMap(u=>u.words);
+}
+
+// =====================================================================
+// GAME
+// =====================================================================
+function shuffle(arr){ const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
+
+function startGame(){
+  const words=getSelectedWords();
+  if(words.length===0){speak('請先選擇課次！');return;}
+  sfxClick();
+  state.questions=shuffle(words);
+  state.total=state.questions.length;
+  state.current=0;
+  state.score=0;
+  state.typed='';
+  state.answered=false;
+
+  document.getElementById('home').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+
+  buildKeyboard();
+  renderQuestion();
+  updateProgress();
+  setTimeout(()=>speak('開始囉！請輸入這個字的注音！'),400);
+}
+
+function renderQuestion(){
+  const q=state.questions[state.current];
+  state.answered=false;
+  state.typed='';
+
+  const area=document.getElementById('questionArea');
+  area.innerHTML=`
+    <div class="q-label">⌨️ 輸入注音</div>
+    <button class="speak-card" id="speakCard" onclick="speakNow()">
+      <span class="char">${q.char}</span>
+      <span class="hint-text">點我聽發音 🔊</span>
+    </button>
+    <div class="feedback-bar" id="feedbackBar"></div>
+  `;
+
+  const disp=document.getElementById('inputDisplay');
+  disp.className='input-display';
+  document.getElementById('inputText').textContent='';
+
+  setTimeout(()=>speak(q.char), 350);
+}
+
+window.speakNow=function(){
+  const q=state.questions[state.current];
+  const card=document.getElementById('speakCard');
+  card.classList.add('speaking');
+  speak(q.char);
+  setTimeout(()=>card.classList.remove('speaking'),1400);
+};
+
+function typeKey(key){
+  if(state.answered)return;
+  sfxClick();
+  state.typed+=key;
+  document.getElementById('inputText').textContent=state.typed;
+  speak(key,.9);
+}
+
+function deleteKey(){
+  if(state.answered)return;
+  sfxClick();
+  state.typed=state.typed.slice(0,-1);
+  document.getElementById('inputText').textContent=state.typed;
+}
+
+function submitAnswer(){
+  if(state.answered||!state.typed)return;
+  const q=state.questions[state.current];
+  state.answered=true;
+  const disp=document.getElementById('inputDisplay');
+  const fb=document.getElementById('feedbackBar');
+
+  if(state.typed===q.bopo){
+    disp.classList.add('correct');
+    sfxCorrect();
+    state.score++;
+    fb.style.color='#1E8449';
+    fb.textContent='✅ 答對了！';
+    speak(`棒！${q.char} 的注音是 ${q.bopo}！`);
+  } else {
+    disp.classList.add('wrong');
+    sfxWrong();
+    fb.style.color=getComputedStyle(document.documentElement).getPropertyValue('--red').trim()||'#E74C3C';
+    fb.textContent=`❌ 正確答案：${q.bopo}`;
+    document.getElementById('inputText').textContent=q.bopo;
+    speak(`哎呀，${q.char} 的注音是 ${q.bopo}！`);
+  }
+  updateProgress();
+  setTimeout(nextQuestion, 1800);
+}
+
+function nextQuestion(){
+  state.current++;
+  if(state.current>=state.total){
+    showResult();
+  } else {
+    renderQuestion();
+    setTimeout(()=>speak(state.questions[state.current].char),350);
+  }
+}
+
+function updateProgress(){
+  const pct=(state.current/state.total)*100;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressText').textContent=`${state.current} / ${state.total}`;
+  document.getElementById('scoreDisplay').textContent=state.score;
+}
+
+function buildKeyboard(){
+  const rows=document.getElementById('bopoRows');
+  rows.innerHTML='';
+  BOPO_LAYOUT.forEach(row=>{
+    const el=document.createElement('div');
+    el.className='bopo-row';
+    row.forEach(key=>{
+      const btn=document.createElement('button');
+      btn.className='bopo-key'+(TONES.includes(key)?' tone-key':'');
+      btn.textContent=key;
+      btn.ontouchstart=(e)=>{e.preventDefault();typeKey(key);};
+      btn.onclick=()=>typeKey(key);
+      el.appendChild(btn);
+    });
+    rows.appendChild(el);
+  });
+  // action row
+  const ar=document.createElement('div');
+  ar.className='bopo-row';
+  ar.style.marginTop='4px';
+  const del=document.createElement('button');
+  del.className='bopo-key delete-key';del.innerHTML='⌫';
+  del.ontouchstart=(e)=>{e.preventDefault();deleteKey();};
+  del.onclick=deleteKey;
+  const sub=document.createElement('button');
+  sub.className='bopo-key submit-key';sub.innerHTML='✓';
+  sub.ontouchstart=(e)=>{e.preventDefault();submitAnswer();};
+  sub.onclick=submitAnswer;
+  ar.appendChild(del);ar.appendChild(sub);
+  rows.appendChild(ar);
+}
+
+// =====================================================================
+// RESULT
+// =====================================================================
+function showResult(){
+  const pct=state.score/state.total;
+  let emoji,title,stars;
+  if(pct>=.9){emoji='🏆';title='超厲害！';stars='⭐⭐⭐';sfxCelebrate();spawnConfetti();}
+  else if(pct>=.7){emoji='🎉';title='做得很好！';stars='⭐⭐';sfxCorrect();}
+  else if(pct>=.5){emoji='💪';title='繼續加油！';stars='⭐';sfxCorrect();}
+  else{emoji='😊';title='再練習一次！';stars='';sfxCorrect();}
+
+  document.getElementById('resultEmoji').textContent=emoji;
+  document.getElementById('resultTitle').textContent=title;
+  document.getElementById('resultScore').textContent=`答對 ${state.score} / ${state.total} 題`;
+  document.getElementById('resultStars').textContent=stars;
+  document.getElementById('resultOverlay').classList.add('show');
+  speak(`${title} 你答對了 ${state.score} 題！`);
+
+  document.getElementById('resultAgainBtn').onclick=()=>{
+    sfxClick();
+    document.getElementById('resultOverlay').classList.remove('show');
+    state.questions=shuffle(getSelectedWords());
+    state.total=state.questions.length;
+    state.current=0;state.score=0;state.typed='';state.answered=false;
+    renderQuestion();updateProgress();
+    setTimeout(()=>speak(state.questions[0].char),350);
+  };
+}
+
+function goHome(){
+  sfxClick();
+  window.speechSynthesis&&window.speechSynthesis.cancel();
+  document.getElementById('resultOverlay').classList.remove('show');
+  document.getElementById('game').classList.remove('active');
+  document.getElementById('home').classList.add('active');
+}
+
+function spawnConfetti(){
+  const c=document.getElementById('confettiContainer');c.innerHTML='';
+  const cols=['#FF6B9D','#9B59B6','#5DADE2','#F7DC6F','#58D68D','#F0A500'];
+  for(let i=0;i<70;i++){
+    const p=document.createElement('div');p.className='confetti-piece';
+    p.style.left=Math.random()*100+'vw';
+    p.style.background=cols[Math.floor(Math.random()*cols.length)];
+    p.style.setProperty('--dur',(1.5+Math.random()*2)+'s');
+    p.style.animationDelay=Math.random()*0.6+'s';
+    p.style.width=(6+Math.random()*8)+'px';p.style.height=(6+Math.random()*8)+'px';
+    c.appendChild(p);
+  }
+  setTimeout(()=>c.innerHTML='',4500);
+}
+
+// =====================================================================
+// EVENTS
+// =====================================================================
+document.getElementById('backBtn').addEventListener('click',()=>{
+  sfxClick();window.speechSynthesis&&window.speechSynthesis.cancel();
+  document.getElementById('game').classList.remove('active');
+  document.getElementById('home').classList.add('active');
+});
+
+window.addEventListener('load',()=>{
+  buildHome();
+  setTimeout(()=>speak('歡迎！請選擇要練習的課次，然後按開始遊戲！'),800);
+});
+</script>
+
+</body>
+</html>
