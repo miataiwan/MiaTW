@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="書本紀錄">
+<meta name="theme-color" content="#2C1810">
+<title>書本紀錄</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<style>
+:root{--ink:#1a0f08;--paper:#faf6f0;--paper2:#f3ece2;--amber:#c8832a;--al:#e8a84a;--ap:#fdf0d8;--rust:#8b3a2a;--sage:#5a7a5a;--muted:#7a6a5a;--border:#ddd0be;--sh:rgba(44,24,16,0.12);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;padding-bottom:80px;}
+.hdr{background:var(--ink);padding:18px 20px 14px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:12px;}
+.hdr-title{font-family:'Noto Serif TC',serif;font-size:1.2rem;font-weight:700;color:var(--al);letter-spacing:.08em;flex:1;}
+.hdr-count{font-size:.78rem;color:var(--muted);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px;}
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--ink);display:flex;padding-bottom:env(safe-area-inset-bottom);border-top:1px solid rgba(255,255,255,.1);}
+.tab{flex:1;padding:12px 0 10px;display:flex;flex-direction:column;align-items:center;gap:4px;color:rgba(255,255,255,.4);font-size:.62rem;cursor:pointer;background:none;border:none;outline:none;}
+.tab.on{color:var(--al);}
+.tab svg{width:22px;height:22px;}
+.pg{display:none;}.pg.on{display:block;}
+/* scan */
+.sz{background:var(--ink);padding:20px;}
+.mtabs{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;}
+.mtabs::-webkit-scrollbar{display:none;}
+.mtab{flex:1;min-width:0;padding:10px 6px;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);font-size:.75rem;cursor:pointer;text-align:center;white-space:nowrap;}
+.mtab.on{background:var(--amber);border-color:var(--amber);color:#fff;font-weight:600;}
+.zone{display:none;}.zone.on{display:block;}
+.scan-btn{background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.2);border-radius:14px;padding:14px;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-bottom:10px;}
+.or{text-align:center;color:rgba(255,255,255,.3);font-size:.75rem;margin:10px 0;}
+.irow{display:flex;gap:8px;}
+.di{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;color:#fff;font-size:.9rem;font-family:'Noto Sans TC',sans-serif;outline:none;}
+.di::placeholder{color:rgba(255,255,255,.3);}
+.go{background:var(--amber);border:none;border-radius:10px;padding:12px 18px;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;white-space:nowrap;}
+.hint{font-size:.72rem;color:rgba(255,255,255,.3);margin-top:8px;line-height:1.6;}
+#sc{display:none;position:relative;border-radius:14px;overflow:hidden;aspect-ratio:4/3;background:#000;margin-top:12px;}
+#sc video{width:100%;height:100%;object-fit:cover;}
+#sc canvas{display:none;}
+.sc-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.sc-fr{width:70%;height:40%;border:2px solid var(--al);border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.5);}
+.sc-x{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;pointer-events:all;}
+.ibn-banner{display:none;background:rgba(200,131,42,.15);border:1px solid var(--amber);border-radius:12px;padding:12px 14px;margin-top:12px;gap:10px;align-items:center;}
+.ibn-banner.on{display:flex;}
+.ibn-code{font-family:monospace;color:var(--al);font-size:.9rem;flex:1;}
+.ibn-sbtn{background:var(--amber);border:none;border-radius:8px;padding:8px 14px;color:#fff;font-size:.8rem;cursor:pointer;white-space:nowrap;}
+.pta{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;color:#fff;font-size:.88rem;font-family:'Noto Sans TC',sans-serif;outline:none;resize:none;min-height:100px;display:block;}
+.pta::placeholder{color:rgba(255,255,255,.3);}
+.pgo{width:100%;margin-top:10px;background:var(--amber);border:none;border-radius:10px;padding:13px;color:#fff;font-size:.92rem;font-weight:600;cursor:pointer;}
+/* results */
+.sres{display:none;margin:12px 16px 0;}
+.sres.on{display:block;}
+.ri{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;box-shadow:0 2px 8px var(--sh);}
+.ri-t{font-family:'Noto Serif TC',serif;font-size:.92rem;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.ri-m{font-size:.75rem;color:var(--muted);}
+/* form */
+.fc{margin:16px;background:#fff;border-radius:18px;box-shadow:0 4px 20px var(--sh);overflow:hidden;}
+.fs{padding:18px 18px 0;}.fs:last-child{padding-bottom:18px;}
+.sl{font-size:.7rem;font-weight:500;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.fld{margin-bottom:14px;}
+.fld label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:5px;}
+.fld input,.fld textarea{width:100%;background:var(--paper);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-family:'Noto Sans TC',sans-serif;font-size:.9rem;color:var(--ink);outline:none;resize:none;}
+.fld input:focus,.fld textarea:focus{border-color:var(--amber);}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.chip{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);font-size:.82rem;cursor:pointer;background:var(--paper);color:var(--muted);}
+.chip.cr{background:var(--sage);border-color:var(--sage);color:#fff;}
+.chip.cn{background:#6a5acd;border-color:#6a5acd;color:#fff;}
+.chip.cb{background:var(--rust);border-color:var(--rust);color:#fff;}
+.ul{margin-bottom:8px;}
+.ui{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.ui:last-child{border-bottom:none;}
+.ui a{flex:1;font-size:.82rem;color:var(--amber);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.udel{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:2px 4px;}
+.aur{display:flex;gap:8px;}
+.aur input{flex:1;background:var(--paper);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'Noto Sans TC',sans-serif;font-size:.82rem;color:var(--ink);outline:none;}
+.aur input:focus{border-color:var(--amber);}
+.au-btn{background:var(--ap);border:1.5px solid var(--amber);border-radius:10px;padding:9px 14px;color:var(--amber);font-size:.82rem;cursor:pointer;white-space:nowrap;}
+.sv-btn{margin:0 16px 20px;width:calc(100% - 32px);background:var(--ink);color:var(--al);border:none;border-radius:14px;padding:16px;font-family:'Noto Serif TC',serif;font-size:1rem;font-weight:600;letter-spacing:.06em;cursor:pointer;}
+.fb{display:none;align-items:center;gap:8px;padding:10px 14px;background:var(--ap);border-radius:10px;font-size:.82rem;color:var(--amber);margin-bottom:12px;}
+.fb.on{display:flex;}
+.sp{width:14px;height:14px;border:2px solid rgba(200,131,42,.3);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--ink);color:var(--al);padding:12px 24px;border-radius:30px;font-size:.85rem;font-weight:500;opacity:0;pointer-events:none;transition:all .3s;z-index:999;white-space:nowrap;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+/* library */
+.lt{padding:14px 16px 10px;display:flex;gap:8px;}
+.lb{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'Noto Sans TC',sans-serif;font-size:.85rem;color:var(--ink);outline:none;}
+.lb:focus{border-color:var(--amber);}
+.fbar{padding:0 16px 12px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;}
+.fbar::-webkit-scrollbar{display:none;}
+.fc2{padding:6px 14px;border-radius:16px;border:1.5px solid var(--border);font-size:.78rem;cursor:pointer;background:#fff;color:var(--muted);white-space:nowrap;}
+.fc2.on{background:var(--ink);border-color:var(--ink);color:var(--al);}
+.bl{padding:0 16px;}
+.bc{background:#fff;border-radius:16px;margin-bottom:12px;box-shadow:0 2px 12px var(--sh);overflow:hidden;}
+.bi{display:flex;padding:14px;gap:12px;align-items:center;}
+/* speak button - illustrated mic */
+.spk{background:linear-gradient(160deg,#f5f4f2,#e6e4e0);border:2px solid #aaa8a4;border-radius:14px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.spk:active{transform:scale(.9);}
+.bco{width:52px;height:72px;border-radius:6px;background:var(--paper2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-size:1.5rem;color:var(--amber);}
+.bm{flex:1;min-width:0;cursor:pointer;}
+.bt{font-family:'Noto Serif TC',serif;font-size:.95rem;font-weight:600;color:var(--ink);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ba{font-size:.75rem;color:var(--muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.br{display:flex;gap:5px;flex-wrap:wrap;}
+.bdg{font-size:.65rem;padding:3px 8px;border-radius:10px;font-weight:500;}
+.dr{background:#e8f5e8;color:var(--sage);}
+.dn{background:#ede8ff;color:#6a5acd;}
+.db{background:#fde8e8;color:var(--rust);}
+.dp{background:var(--ap);color:var(--amber);}
+.bd{font-size:.68rem;color:var(--border);align-self:flex-end;flex-shrink:0;}
+.es{text-align:center;padding:60px 20px;color:var(--muted);}
+.ei{font-size:3rem;margin-bottom:14px;}
+.et{font-size:.9rem;line-height:1.6;white-space:pre-line;}
+/* modal */
+.mo{display:none;position:fixed;inset:0;z-index:500;background:rgba(26,15,8,.6);backdrop-filter:blur(4px);}
+.mo.on{display:flex;align-items:flex-end;}
+.ms{background:var(--paper);border-radius:24px 24px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:20px 20px calc(20px + env(safe-area-inset-bottom));animation:su .3s ease;}
+@keyframes su{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.mh{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px;}
+.mt2{font-family:'Noto Serif TC',serif;font-size:1.25rem;font-weight:700;margin-bottom:4px;}
+.mau{font-size:.82rem;color:var(--muted);margin-bottom:14px;}
+.mbg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.msec{margin-bottom:14px;}
+.mst{font-size:.7rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
+.msb{font-size:.88rem;line-height:1.7;color:var(--ink);background:#fff;border-radius:10px;padding:10px 12px;}
+.muls{display:flex;flex-direction:column;gap:6px;}
+.mul{display:flex;align-items:center;gap:8px;background:var(--ap);border-radius:10px;padding:10px 12px;color:var(--amber);font-size:.82rem;text-decoration:none;}
+.mac{display:flex;gap:10px;margin-top:18px;}
+.me,.md{flex:1;padding:13px;border-radius:12px;border:none;font-family:'Noto Sans TC',sans-serif;font-size:.88rem;cursor:pointer;}
+.me{background:var(--ink);color:var(--al);}
+.md{background:#fde8e8;color:var(--rust);}
+/* pub modal */
+.pi{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.pi:last-child{border-bottom:none;}
+.pc{width:40px;height:56px;border-radius:5px;background:var(--paper2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-size:1.2rem;color:var(--amber);}
+.pinfo{flex:1;min-width:0;}
+.pt2{font-family:'Noto Serif TC',serif;font-size:.9rem;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pau{font-size:.72rem;color:var(--muted);}
+/* stats */
+.sg{padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sc2{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px var(--sh);}
+.sc2.w{grid-column:1/-1;}
+.sn{font-family:'Noto Serif TC',serif;font-size:2.2rem;font-weight:700;color:var(--amber);}
+.slb{font-size:.75rem;color:var(--muted);margin-top:4px;}
+.sbi{display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;padding:4px 0;}
+.sbn{font-size:.82rem;color:var(--muted);width:70px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sbt{flex:1;height:10px;background:var(--paper2);border-radius:5px;overflow:hidden;}
+.sbf{height:100%;border-radius:5px;background:var(--amber);}
+.sbc{font-size:.78rem;color:var(--muted);width:24px;text-align:right;}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <span class="hdr-title">📚 書本紀錄</span>
+  <span class="hdr-count" id="hdrCount">0 本</span>
+</div>
+
+<!-- ADD -->
+
+<div class="pg on" id="pgAdd">
+  <div class="sz">
+    <div class="mtabs">
+      <button class="mtab on" id="mtSearch" onclick="setMode('search')">🔍 查詢</button>
+      <button class="mtab" id="mtScan" onclick="setMode('scan')">📷 掃描</button>
+    </div>
+
+```
+<!-- 查詢：書名 + ISBN -->
+<div class="zone on" id="zSearch">
+  <div class="fld2"><input class="di" id="titleInput" placeholder="書名，例：猜猜我有多愛你" type="text"></div>
+  <div style="height:8px;"></div>
+  <div class="fld2"><input class="di" id="ibnInput" placeholder="ISBN，例：9789571234567" type="text" inputmode="numeric"></div>
+  <div style="display:flex;gap:8px;margin-top:12px;">
+    <button onclick="searchQuery()" style="flex:1;background:#2a6496;border:none;border-radius:10px;padding:13px;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;">📚 查桃園圖書館</button>
+    <button onclick="searchGoogle()" style="flex:1;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);border-radius:10px;padding:13px;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;">🔍 搜尋 Google</button>
+  </div>
+  <div class="hint">查到結果後複製，切換到「📷 掃描」頁的貼上欄位</div>
+</div>
+
+<!-- 掃描 + 貼上 -->
+<div class="zone" id="zScan">
+  <button class="scan-btn" onclick="startScan()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="7" y1="6" x2="7" y2="18"/><line x1="10" y1="6" x2="10" y2="18"/><line x1="14" y1="6" x2="14" y2="18"/><line x1="17" y1="6" x2="17" y2="18"/></svg>
+    點此開啟相機掃描條碼
+  </button>
+  <div id="sc"><div id="scInner"></div></div>
+  <div class="ibn-banner" id="ibnBanner">
+    <div style="flex:1"><div style="font-size:.7rem;color:rgba(255,255,255,.4);margin-bottom:2px;">掃描到 ISBN</div><div class="ibn-code" id="ibnCode"></div></div>
+    <button class="ibn-sbtn" onclick="openLibSearch()" style="background:#2a6496;">📚 桃園圖書館</button>
+    <button class="ibn-sbtn" onclick="openGSearch()">🔍 Google</button>
+  </div>
+  <div style="height:14px;"></div>
+  <div style="font-size:.75rem;color:rgba(255,255,255,.5);margin-bottom:8px;letter-spacing:.05em;">貼上書目資訊</div>
+  <textarea class="pta" id="pasteInput" rows="4" placeholder="從圖書館或 Google 複製書目資訊貼這裡&#10;&#10;例：書名：猜猜我有多愛你&#10;作者：山姆·麥克布雷尼&#10;出版社：上誼"></textarea>
+  <button class="pgo" onclick="parseText()">✨ 自動辨識填入</button>
+</div>
+```
+
+  </div>
+
+  <div class="sres" id="sres"><div style="font-size:.75rem;color:var(--muted);margin-bottom:8px;">選擇書本：</div><div id="resList"></div></div>
+
+  <div class="fc">
+    <div class="fs">
+      <div class="sl">書本資訊</div>
+      <div class="fb" id="fb"><div class="sp"></div><span id="fbMsg">查詢中…</span></div>
+      <div class="fld"><label>書名 *</label><input type="text" id="fTitle" placeholder="請輸入書名"></div>
+      <div class="fld"><label>作者</label><input type="text" id="fAuthor" placeholder="作者名稱"></div>
+      <div class="fld"><label>出版社</label><input type="text" id="fPub" placeholder="出版社名稱"></div>
+      <div class="fld"><label>ISBN</label><input type="text" id="fISBN" placeholder="條碼 / ISBN"></div>
+    </div>
+    <div class="fs">
+      <div class="sl">狀態標記</div>
+      <div class="chips">
+        <div class="chip" id="cRead" onclick="toggleChip('read')">✅ 已閱讀</div>
+        <div class="chip" id="cNote" onclick="toggleChip('note')">🔤 注音</div>
+        <div class="chip" id="cBorrow" onclick="toggleChip('borrow')">📦 已借閱</div>
+      </div>
+    </div>
+    <div class="fs">
+      <div class="sl">備註</div>
+      <div class="fld"><textarea id="fNotes" rows="3" placeholder="心得、適合年齡、推薦原因…"></textarea></div>
+    </div>
+    <div class="fs">
+      <div class="sl">相關網址</div>
+      <div class="ul" id="urlList"></div>
+      <div class="aur"><input type="url" id="urlIn" placeholder="https://youtube.com/..."><button class="au-btn" onclick="addUrl()">＋ 加入</button></div>
+    </div>
+  </div>
+  <button class="sv-btn" onclick="saveBook()">儲存書本</button>
+</div>
+
+<!-- LIBRARY -->
+
+<div class="pg" id="pgLibrary">
+  <div class="lt"><input class="lb" id="srchBox" placeholder="🔍 搜尋書名、作者…" oninput="renderLib()"></div>
+  <div class="fbar">
+    <div class="fc2 on" data-f="all" onclick="setFilter('all')">全部</div>
+    <div class="fc2" data-f="read" onclick="setFilter('read')">已閱讀</div>
+    <div class="fc2" data-f="note" onclick="setFilter('note')">注音</div>
+    <div class="fc2" data-f="borrow" onclick="setFilter('borrow')">已借閱</div>
+  </div>
+  <div class="bl" id="bookList"></div>
+</div>
+
+<!-- STATS -->
+
+<div class="pg" id="pgStats">
+  <div class="sg" id="statsGrid"></div>
+  <div style="margin:0 16px 20px;background:#fff;border-radius:18px;box-shadow:0 2px 12px var(--sh);padding:18px;">
+    <div style="font-size:.7rem;font-weight:500;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);">資料備份</div>
+    <div style="font-size:.82rem;color:var(--muted);margin-bottom:14px;line-height:1.6;">定期匯出備份，避免清除瀏覽器資料時書單消失。每次匯出會覆蓋舊備份，只保留一個檔案。</div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="exportData()" style="flex:1;background:var(--ink);border:none;border-radius:12px;padding:14px;color:var(--al);font-size:.9rem;font-weight:600;cursor:pointer;">⬇️ 匯出備份</button>
+      <button onclick="document.getElementById('importFile').click()" style="flex:1;background:var(--paper2);border:1.5px solid var(--border);border-radius:12px;padding:14px;color:var(--ink);font-size:.9rem;font-weight:600;cursor:pointer;">⬆️ 匯入還原</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <div style="font-size:.72rem;color:var(--muted);margin-top:10px;text-align:center;">上次備份：<span id="lastBackup">尚未備份</span></div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+
+<div class="mo" id="detailMo" onclick="closeMo(event)">
+  <div class="ms"><div class="mh"></div><div id="detailContent"></div></div>
+</div>
+
+<!-- PUB MODAL -->
+
+<div class="mo" id="pubMo" onclick="closePubMo(event)">
+  <div class="ms"><div class="mh"></div><div id="pubContent"></div></div>
+</div>
+
+<!-- TABS -->
+
+<div class="tabs">
+  <button class="tab on" id="tabAdd" onclick="switchTab('Add')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>新增
+  </button>
+  <button class="tab" id="tabLibrary" onclick="switchTab('Library')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>書單
+  </button>
+  <button class="tab" id="tabStats" onclick="switchTab('Stats')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>統計
+  </button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var SK = 'booktracker_v2';
+var books = [];
+var editId = null;
+var curFilter = 'all';
+var pUrls = [];
+var chips = {read:false, note:false, borrow:false};
+var lastISBN = '';
+var scanOn = false;
+
+function loadBooks() {
+  try { books = JSON.parse(localStorage.getItem(SK)) || []; }
+  catch(e) { books = []; }
+}
+function saveBooks() {
+  localStorage.setItem(SK, JSON.stringify(books));
+  updateCount();
+}
+function updateCount() {
+  document.getElementById('hdrCount').textContent = books.length + ' 本';
+}
+
+function switchTab(t) {
+  ['Add','Library','Stats'].forEach(function(n) {
+    document.getElementById('pg'+n).classList.remove('on');
+    document.getElementById('tab'+n).classList.remove('on');
+  });
+  document.getElementById('pg'+t).classList.add('on');
+  document.getElementById('tab'+t).classList.add('on');
+  if(t === 'Library') renderLib();
+  if(t === 'Stats') renderStats();
+  if(t !== 'Add') stopScan();
+}
+
+function setMode(m) {
+  ['search','scan'].forEach(function(n) {
+    var cap = n.charAt(0).toUpperCase() + n.slice(1);
+    document.getElementById('mt'+cap).classList.remove('on');
+    document.getElementById('z'+cap).classList.remove('on');
+  });
+  var cap2 = m.charAt(0).toUpperCase() + m.slice(1);
+  document.getElementById('mt'+cap2).classList.add('on');
+  document.getElementById('z'+cap2).classList.add('on');
+  document.getElementById('sres').classList.remove('on');
+  if(m !== 'scan') stopScan();
+}
+
+function startScan() {
+  var c = document.getElementById('sc');
+  if(scanOn) { stopScan(); return; }
+  c.style.display = 'block';
+  var inner = document.getElementById('scInner');
+  if(!inner.querySelector('.sc-ov')) {
+    var ov = document.createElement('div'); ov.className = 'sc-ov';
+    ov.innerHTML = '<div class="sc-fr"></div>';
+    inner.appendChild(ov);
+    var xb = document.createElement('button'); xb.className = 'sc-x';
+    xb.textContent = '✕'; xb.onclick = stopScan;
+    c.appendChild(xb);
+  }
+  Quagga.init({
+    inputStream:{name:'Live',type:'LiveStream',target:inner,constraints:{facingMode:'environment',width:640,height:480}},
+    decoder:{readers:['ean_reader','ean_8_reader']},locate:true
+  }, function(err) {
+    if(err) { showToast('請在 HTTPS 網域使用相機'); c.style.display='none'; return; }
+    Quagga.start(); scanOn = true;
+  });
+  Quagga.onDetected(function(r) {
+    var code = r.codeResult.code;
+    if(code && code.length >= 10) {
+      stopScan();
+      lastISBN = code;
+      document.getElementById('fISBN').value = code;
+      document.getElementById('ibnCode').textContent = code;
+      document.getElementById('ibnBanner').classList.add('on');
+      document.getElementById('scanHint').style.display = 'none';
+      showToast('✓ 掃描成功！點 Google 搜尋查書目');
+    }
+  });
+}
+
+function stopScan() {
+  if(scanOn) { try { Quagga.stop(); } catch(e) {} scanOn = false; }
+  var c = document.getElementById('sc');
+  if(c) c.style.display = 'none';
+}
+
+function openGSearch() {
+  var isbn = lastISBN || document.getElementById('fISBN').value.trim();
+  if(!isbn) { showToast('請先掃描條碼'); return; }
+  window.open('https://www.google.com/search?q=ISBN+' + isbn + '+書名+作者+出版社', '_blank');
+  showToast('複製結果後切換到「📋 貼上」');
+}
+
+function lookupISBN() {
+  var val = document.getElementById('ibnInput').value.trim().replace(/-/g,'');
+  if(!val) { showToast('請輸入 ISBN'); return; }
+  document.getElementById('fISBN').value = val;
+  lastISBN = val;
+  fetchByISBN(val);
+}
+
+function fetchByISBN(isbn) {
+  showFb('查詢書目中…');
+  var xhr1 = new XMLHttpRequest();
+  xhr1.open('GET', 'https://openlibrary.org/api/books?bibkeys=ISBN:' + isbn + '&format=json&jscmd=data');
+  xhr1.onload = function() {
+    try {
+      var d = JSON.parse(xhr1.responseText);
+      var b = d['ISBN:' + isbn];
+      if(b && b.title) {
+        document.getElementById('fTitle').value = b.title;
+        if(b.authors && b.authors.length) document.getElementById('fAuthor').value = b.authors.map(function(a){return a.name;}).join('、');
+        if(b.publishers && b.publishers.length) document.getElementById('fPub').value = b.publishers[0].name;
+        hideFb(); showToast('✓ 已匯入書目'); return;
+      }
+    } catch(e) {}
+    fetchByISBN2(isbn);
+  };
+  xhr1.onerror = function() { fetchByISBN2(isbn); };
+  xhr1.send();
+}
+
+function fetchByISBN2(isbn) {
+  var xhr2 = new XMLHttpRequest();
+  xhr2.open('GET', 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn);
+  xhr2.onload = function() {
+    try {
+      var d = JSON.parse(xhr2.responseText);
+      if(d.items && d.items.length) {
+        var v = d.items[0].volumeInfo;
+        if(v.title) document.getElementById('fTitle').value = v.title;
+        if(v.authors && v.authors.length) document.getElementById('fAuthor').value = v.authors.join('、');
+        if(v.publisher) document.getElementById('fPub').value = v.publisher;
+        hideFb(); showToast('✓ 已匯入書目'); return;
+      }
+    } catch(e) {}
+    hideFb();
+    showToast('查無資料，開啟 Google 搜尋…');
+    setTimeout(function() {
+      window.open('https://www.google.com/search?q=ISBN+' + isbn + '+書名+作者+出版社', '_blank');
+      setMode('scan');
+    }, 1000);
+  };
+  xhr2.onerror = function() { hideFb(); showToast('網路錯誤'); };
+  xhr2.send();
+}
+
+function parseText() {
+  var raw = document.getElementById('pasteInput').value.trim();
+  if(!raw) { showToast('請先貼上書本資訊'); return; }
+
+  function extract(patterns) {
+    for(var i=0; i<patterns.length; i++) {
+      var m = raw.match(patterns[i]);
+      if(m && m[1]) return m[1].trim().replace(/[,，。][\s\S]*$/,'').replace(/\$[\d.]+[\s\S]*$/,'').trim();
+    }
+    return '';
+  }
+
+  var title = extract([/書名[：:]\s*([^\n,，。$]+)/, /^([^\n：:]{2,30})$/m]);
+  var author = extract([/作者[：:]\s*([^\n,，;；。$]+)/, /著者[：:]\s*([^\n,，;；。$]+)/]);
+  var pub = extract([/出版社[：:]\s*([^\n,，;；。$]+)/, /出版[：:]\s*([^\n,，;；。$]+)/]);
+  var isbnM = raw.match(/ISBN[：: ]*([0-9X-]{10,17})/i) || raw.match(/([0-9]{13})/);
+  var isbn = isbnM ? isbnM[1].replace(/-/g,'') : '';
+
+  if(!title && !isbn) { showToast('辨識不到書目，請確認格式'); return; }
+  if(title) document.getElementById('fTitle').value = title;
+  if(author) document.getElementById('fAuthor').value = author;
+  if(pub) document.getElementById('fPub').value = pub;
+  if(isbn) document.getElementById('fISBN').value = isbn;
+  document.getElementById('pasteInput').value = '';
+  var filled = [title&&'書名', author&&'作者', pub&&'出版社', isbn&&'ISBN'].filter(Boolean);
+  showToast('✓ 已填入：' + filled.join('、'));
+  document.querySelector('.fc').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function searchTitle() {
+  var q = document.getElementById('titleInput').value.trim();
+  if(!q) { showToast('請輸入書名'); return; }
+  showFb('搜尋中…');
+  document.getElementById('sres').classList.remove('on');
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://www.googleapis.com/books/v1/volumes?q=' + encodeURIComponent(q) + '&maxResults=10&printType=books');
+  xhr.onload = function() {
+    hideFb();
+    try {
+      var d = JSON.parse(xhr.responseText);
+      if(d.items && d.items.length) { showResults(d.items); }
+      else { showToast('找不到，請試「📋 貼上」'); }
+    } catch(e) { showToast('搜尋失敗'); }
+  };
+  xhr.onerror = function() { hideFb(); showToast('網路錯誤'); };
+  xhr.send();
+}
+
+var _items = [];
+function showResults(items) {
+  _items = items;
+  var html = '';
+  for(var i=0; i<Math.min(items.length,8); i++) {
+    var v = items[i].volumeInfo;
+    var au = v.authors ? v.authors.slice(0,2).join('、') : '';
+    var pb = v.publisher || '';
+    var meta = [au, pb].filter(Boolean).join(' · ');
+    html += '<div class="ri" onclick="pickRes(' + i + ')"><div class="ri-t">' + (v.title||'') + '</div>' + (meta ? '<div class="ri-m">' + meta + '</div>' : '') + '</div>';
+  }
+  document.getElementById('resList').innerHTML = html;
+  document.getElementById('sres').classList.add('on');
+  setTimeout(function() { document.getElementById('sres').scrollIntoView({behavior:'smooth', block:'nearest'}); }, 100);
+}
+
+function pickRes(i) {
+  var v = _items[i].volumeInfo;
+  if(v.title) document.getElementById('fTitle').value = v.title;
+  if(v.authors && v.authors.length) document.getElementById('fAuthor').value = v.authors.join('、');
+  if(v.publisher) document.getElementById('fPub').value = v.publisher;
+  var ids = v.industryIdentifiers || [];
+  var isbn = null;
+  for(var j=0; j<ids.length; j++) { if(ids[j].type==='ISBN_13') { isbn=ids[j].identifier; break; } }
+  if(!isbn) for(var k=0; k<ids.length; k++) { if(ids[k].type==='ISBN_10') { isbn=ids[k].identifier; break; } }
+  if(isbn) document.getElementById('fISBN').value = isbn;
+  document.getElementById('sres').classList.remove('on');
+  document.querySelector('.fc').scrollIntoView({behavior:'smooth', block:'start'});
+  showToast('✓ 已填入書目');
+}
+
+function searchQuery() {
+  var title = document.getElementById('titleInput').value.trim();
+  var isbn = document.getElementById('ibnInput').value.trim().replace(/-/g,'');
+  if(!title && !isbn) { showToast('請輸入書名或 ISBN'); return; }
+  var url;
+  if(isbn) {
+    url = 'https://webpac.typl.gov.tw/search?searchField=ISBN&searchInput=' + isbn;
+  } else {
+    url = 'https://webpac.typl.gov.tw/search?searchField=TI&searchInput=' + encodeURIComponent(title);
+  }
+  window.open(url, '_blank');
+  showToast('複製書目後切換到「📷 掃描」頁貼上');
+}
+
+function searchGoogle() {
+  var title = document.getElementById('titleInput').value.trim();
+  var isbn = document.getElementById('ibnInput').value.trim().replace(/-/g,'');
+  if(!title && !isbn) { showToast('請輸入書名或 ISBN'); return; }
+  var q = isbn ? ('ISBN ' + isbn + ' 書名 作者 出版社') : (title + ' 書名 作者 出版社 台灣');
+  window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank');
+  showToast('複製書目後切換到「📷 掃描」頁貼上');
+}
+
+function openLibSearch() {
+  var isbn = lastISBN || document.getElementById('fISBN').value.trim();
+  if(!isbn) { showToast('請先掃描條碼'); return; }
+  window.open('https://webpac.typl.gov.tw/search?searchField=ISBN&searchInput=' + isbn, '_blank');
+  setTimeout(function(){ setMode('scan'); showToast('複製書目後切換到「📋 貼上」'); }, 800);
+}
+
+function openLibSearchManual() {
+  var isbn = document.getElementById('ibnInput').value.trim().replace(/-/g,'');
+  if(!isbn) { showToast('請先輸入 ISBN'); return; }
+  window.open('https://webpac.typl.gov.tw/search?searchField=ISBN&searchInput=' + isbn, '_blank');
+  setTimeout(function(){ setMode('scan'); showToast('複製書目後切換到「📋 貼上」'); }, 800);
+}
+
+function openGSearchManual() {
+  var isbn = document.getElementById('ibnInput').value.trim().replace(/-/g,'');
+  if(!isbn) { showToast('請先輸入 ISBN'); return; }
+  window.open('https://www.google.com/search?q=ISBN+' + isbn + '+書名+作者+出版社', '_blank');
+  setTimeout(function(){ setMode('scan'); }, 800);
+}
+
+function showFb(msg) { document.getElementById('fbMsg').textContent = msg; document.getElementById('fb').classList.add('on'); }
+function hideFb() { document.getElementById('fb').classList.remove('on'); }
+
+function toggleChip(t) {
+  chips[t] = !chips[t];
+  var el = document.getElementById('c' + t.charAt(0).toUpperCase() + t.slice(1));
+  var clsMap = {read:'cr', note:'cn', borrow:'cb'};
+  el.className = 'chip' + (chips[t] ? ' ' + clsMap[t] : '');
+}
+
+function addUrl() {
+  var inp = document.getElementById('urlIn');
+  var u = inp.value.trim();
+  if(!u) return;
+  if(u.indexOf('http') !== 0) u = 'https://' + u;
+  pUrls.push(u); renderUrls(); inp.value = '';
+}
+function removeUrl(i) { pUrls.splice(i,1); renderUrls(); }
+function renderUrls() {
+  var html = '';
+  for(var i=0; i<pUrls.length; i++) {
+    html += '<div class="ui"><a href="' + pUrls[i] + '" target="_blank">' + pUrls[i] + '</a><button class="udel" onclick="removeUrl(' + i + ')">✕</button></div>';
+  }
+  document.getElementById('urlList').innerHTML = html;
+}
+
+function saveBook() {
+  var title = document.getElementById('fTitle').value.trim();
+  if(!title) { showToast('請輸入書名'); return; }
+  var now = new Date().toISOString();
+  var orig = editId ? books.filter(function(b){return b.id===editId;})[0] : null;
+  var book = {
+    id: editId || ('' + Date.now()),
+    title: title,
+    author: document.getElementById('fAuthor').value.trim(),
+    publisher: document.getElementById('fPub').value.trim(),
+    isbn: document.getElementById('fISBN').value.trim(),
+    isRead: chips.read, hasNote: chips.note, isBorrow: chips.borrow,
+    notes: document.getElementById('fNotes').value.trim(),
+    urls: pUrls.slice(),
+    date: orig ? orig.date : now
+  };
+  if(editId) {
+    for(var i=0; i<books.length; i++) { if(books[i].id===editId) { books[i]=book; break; } }
+    editId = null; showToast('✓ 已更新');
+  } else {
+    books.unshift(book); showToast('✓ 已儲存');
+  }
+  saveBooks(); resetForm();
+}
+
+function resetForm() {
+  ['fTitle','fAuthor','fPub','fISBN','fNotes','urlIn','ibnInput','pasteInput','titleInput'].forEach(function(id) {
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  chips = {read:false, note:false, borrow:false};
+  document.getElementById('cRead').className = 'chip';
+  document.getElementById('cNote').className = 'chip';
+  document.getElementById('cBorrow').className = 'chip';
+  pUrls = []; renderUrls();
+  document.getElementById('sres').classList.remove('on');
+  document.getElementById('ibnBanner').classList.remove('on');
+  document.getElementById('scanHint').style.display = '';
+  lastISBN = '';
+}
+
+function setFilter(f) {
+  curFilter = f;
+  document.querySelectorAll('.fc2').forEach(function(el) { el.classList.toggle('on', el.dataset.f === f); });
+  renderLib();
+}
+
+function renderLib() {
+  var q = document.getElementById('srchBox').value.toLowerCase();
+  var list = books.filter(function(b) {
+    var m = !q || b.title.toLowerCase().indexOf(q)>=0 || (b.author||'').toLowerCase().indexOf(q)>=0 || (b.publisher||'').toLowerCase().indexOf(q)>=0;
+    if(!m) return false;
+    if(curFilter==='read') return b.isRead;
+    if(curFilter==='note') return b.hasNote;
+    if(curFilter==='borrow') return b.isBorrow;
+    return true;
+  });
+  var el = document.getElementById('bookList');
+  if(!list.length) {
+    el.innerHTML = '<div class="es"><div class="ei">📖</div><div class="et">' + (books.length===0 ? '還沒有書本紀錄\n點擊「新增」開始記錄吧！' : '沒有符合條件的書本') + '</div></div>';
+    return;
+  }
+  var html = '';
+  for(var i=0; i<list.length; i++) {
+    var b = list[i];
+    var bg = '';
+    if(b.isRead) bg += '<span class="bdg dr">已閱讀</span>';
+    if(b.hasNote) bg += '<span class="bdg dn">注音</span>';
+    if(b.isBorrow) bg += '<span class="bdg db">已借閱</span>';
+    if(b.publisher) bg += '<span class="bdg dp">' + b.publisher + '</span>';
+    var d = new Date(b.date).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'});
+    html += '<div class="bc"><div class="bi">';
+    html += '<button class="spk" onclick="speakBook(\'' + b.id + '\')">';
+    html += '<svg viewBox="0 0 32 32" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg">';
+    html += '<rect x="11" y="3" width="10" height="15" rx="5" fill="#c8c6c2" stroke="#3d3a36" stroke-width="1.6"/>';
+    html += '<rect x="13.5" y="5.5" width="2" height="5" rx="1" fill="white" fill-opacity="0.6"/>';
+    html += '<path d="M7 16.5C7 21.2 9.2 24 16 24C22.8 24 25 21.2 25 16.5" stroke="#3d3a36" stroke-width="2" stroke-linecap="round" fill="none"/>';
+    html += '<line x1="16" y1="24" x2="16" y2="28" stroke="#3d3a36" stroke-width="2" stroke-linecap="round"/>';
+    html += '<line x1="11" y1="28" x2="21" y2="28" stroke="#3d3a36" stroke-width="2" stroke-linecap="round"/>';
+    html += '</svg></button>';
+    html += '<div class="bco">' + b.title.charAt(0) + '</div>';
+    html += '<div class="bm" onclick="openDetail(\'' + b.id + '\')">';
+    html += '<div class="bt">' + b.title + '</div>';
+    html += '<div class="ba">' + (b.author||b.publisher||'—') + '</div>';
+    html += '<div class="br">' + bg + '</div></div>';
+    html += '<div class="bd" onclick="openDetail(\'' + b.id + '\')">' + d + '</div></div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function speakBook(id) {
+  var b = null;
+  for(var i=0; i<books.length; i++) { if(books[i].id===id) { b=books[i]; break; } }
+  if(!b) return;
+  if(!window.speechSynthesis) { showToast('此裝置不支援語音'); return; }
+  window.speechSynthesis.cancel();
+  var text = b.title + (b.author ? '，作者：' + b.author : '');
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW'; u.rate = 0.85; u.pitch = 1.1;
+  var voices = window.speechSynthesis.getVoices();
+  for(var i=0; i<voices.length; i++) {
+    if(voices[i].lang.indexOf('zh') >= 0 && voices[i].lang.indexOf('TW') >= 0) { u.voice = voices[i]; break; }
+  }
+  window.speechSynthesis.speak(u);
+}
+
+function openDetail(id) {
+  var b = null;
+  for(var i=0; i<books.length; i++) { if(books[i].id===id) { b=books[i]; break; } }
+  if(!b) return;
+  var bg = '';
+  if(b.isRead) bg += '<span class="bdg dr">✅ 已閱讀</span>';
+  if(b.hasNote) bg += '<span class="bdg dn">🔤 注音</span>';
+  if(b.isBorrow) bg += '<span class="bdg db">📦 已借閱</span>';
+  if(b.publisher) bg += '<span class="bdg dp">' + b.publisher + '</span>';
+  var urlsH = '';
+  if(b.urls && b.urls.length) {
+    urlsH = '<div class="msec"><div class="mst">相關網址</div><div class="muls">';
+    for(var i=0; i<b.urls.length; i++) {
+      var u = b.urls[i]; var label = u.length>45 ? u.slice(0,45)+'…' : u;
+      urlsH += '<a href="' + u + '" target="_blank" class="mul">🔗 ' + label + '</a>';
+    }
+    urlsH += '</div></div>';
+  }
+  var notesH = b.notes ? '<div class="msec"><div class="mst">備註</div><div class="msb">' + b.notes.replace(/\n/g,'<br>') + '</div></div>' : '';
+  var isbnH = b.isbn ? '<div class="msec"><div class="mst">ISBN</div><div class="msb" style="font-family:monospace">' + b.isbn + '</div></div>' : '';
+  document.getElementById('detailContent').innerHTML =
+    '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:4px;">' +
+    '<div class="mt2" style="flex:1">' + b.title + '</div>' +
+    '<button onclick="speakBook(\'' + id + '\')" style="background:linear-gradient(160deg,#f5f4f2,#e6e4e0);border:2px solid #aaa8a4;border-radius:14px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">' +
+    '<svg viewBox="0 0 32 32" width="26" height="26" fill="none"><rect x="11" y="3" width="10" height="15" rx="5" fill="#c8c6c2" stroke="#3d3a36" stroke-width="1.6"/><rect x="13.5" y="5.5" width="2" height="5" rx="1" fill="white" fill-opacity="0.6"/><path d="M7 16.5C7 21.2 9.2 24 16 24C22.8 24 25 21.2 25 16.5" stroke="#3d3a36" stroke-width="2" stroke-linecap="round" fill="none"/><line x1="16" y1="24" x2="16" y2="28" stroke="#3d3a36" stroke-width="2" stroke-linecap="round"/><line x1="11" y1="28" x2="21" y2="28" stroke="#3d3a36" stroke-width="2" stroke-linecap="round"/></svg>' +
+    '</button></div>' +
+    '<div class="mau">' + ([b.author,b.publisher].filter(Boolean).join(' · ')||'—') + '</div>' +
+    '<div class="mbg">' + (bg||'<span class="bdg dp">未標記</span>') + '</div>' +
+    notesH + urlsH + isbnH +
+    '<div class="mac"><button class="me" onclick="editBook(\'' + id + '\')">✏️ 編輯</button><button class="md" onclick="delBook(\'' + id + '\')">🗑 刪除</button></div>';
+  document.getElementById('detailMo').classList.add('on');
+}
+
+function closeMo(e) { if(e.target===e.currentTarget) document.getElementById('detailMo').classList.remove('on'); }
+
+function editBook(id) {
+  document.getElementById('detailMo').classList.remove('on');
+  var b = null;
+  for(var i=0; i<books.length; i++) { if(books[i].id===id) { b=books[i]; break; } }
+  if(!b) return;
+  editId = id;
+  document.getElementById('fTitle').value = b.title;
+  document.getElementById('fAuthor').value = b.author||'';
+  document.getElementById('fPub').value = b.publisher||'';
+  document.getElementById('fISBN').value = b.isbn||'';
+  document.getElementById('fNotes').value = b.notes||'';
+  chips = {read:b.isRead, note:b.hasNote, borrow:b.isBorrow};
+  document.getElementById('cRead').className = 'chip' + (chips.read?' cr':'');
+  document.getElementById('cNote').className = 'chip' + (chips.note?' cn':'');
+  document.getElementById('cBorrow').className = 'chip' + (chips.borrow?' cb':'');
+  pUrls = (b.urls||[]).slice(); renderUrls();
+  switchTab('Add'); window.scrollTo({top:0,behavior:'smooth'});
+  showToast('編輯：' + b.title);
+}
+
+function delBook(id) {
+  var b = null;
+  for(var i=0; i<books.length; i++) { if(books[i].id===id) { b=books[i]; break; } }
+  if(!confirm('確定刪除《' + (b?b.title:'') + '》？')) return;
+  books = books.filter(function(x){return x.id!==id;});
+  saveBooks();
+  document.getElementById('detailMo').classList.remove('on');
+  renderLib(); showToast('已刪除');
+}
+
+function renderStats() {
+  updateLastBackup();
+  var total=books.length, read=0, note=0, borrow=0;
+  var pm = {};
+  for(var i=0; i<books.length; i++) {
+    if(books[i].isRead) read++;
+    if(books[i].hasNote) note++;
+    if(books[i].isBorrow) borrow++;
+    var p = books[i].publisher||'未知'; pm[p] = (pm[p]||0)+1;
+  }
+  var tp = Object.keys(pm).map(function(k){return [k,pm[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,8);
+  var mx = tp.length ? tp[0][1] : 1;
+  var bars = '';
+  for(var j=0; j<tp.length; j++) {
+    bars += '<div class="sbi" onclick="openPubMo(\'' + tp[j][0].replace(/'/g,"\\'") + '\')">' +
+      '<div class="sbn">' + tp[j][0] + '</div>' +
+      '<div class="sbt"><div class="sbf" style="width:' + (tp[j][1]/mx*100) + '%"></div></div>' +
+      '<div class="sbc">' + tp[j][1] + '</div>' +
+      '<div style="font-size:.75rem;color:var(--amber);margin-left:4px;">›</div></div>';
+  }
+  document.getElementById('statsGrid').innerHTML =
+    '<div class="sc2"><div class="sn">'+total+'</div><div class="slb">總書本數</div></div>' +
+    '<div class="sc2"><div class="sn">'+read+'</div><div class="slb">已閱讀</div></div>' +
+    '<div class="sc2"><div class="sn">'+note+'</div><div class="slb">注音書</div></div>' +
+    '<div class="sc2"><div class="sn">'+borrow+'</div><div class="slb">已借閱</div></div>' +
+    (tp.length ? '<div class="sc2 w"><div style="font-size:.7rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">出版社 <span style="color:var(--amber);font-size:.65rem;">點選查看書單</span></div>' + bars + '</div>' : '');
+}
+
+function openPubMo(pub) {
+  var pb = books.filter(function(b){return (b.publisher||'未知')===pub;});
+  var html = '<div style="font-family:Noto Serif TC,serif;font-size:1.1rem;font-weight:700;margin-bottom:4px;">' + pub + '</div>';
+  html += '<div style="font-size:.8rem;color:var(--muted);margin-bottom:16px;">共 ' + pb.length + ' 本</div>';
+  for(var i=0; i<pb.length; i++) {
+    var b = pb[i];
+    html += '<div class="pi" onclick="openDetail(\'' + b.id + '\');closePubMo();">';
+    html += '<div class="pc">' + b.title.charAt(0) + '</div>';
+    html += '<div class="pinfo"><div class="pt2">' + b.title + '</div><div class="pau">' + (b.author||'—') + '</div></div>';
+    html += '<button style="background:none;border:none;cursor:pointer;font-size:1.2rem;padding:4px 8px;" onclick="event.stopPropagation();speakBook(\'' + b.id + '\')">';
+    html += '<svg viewBox="0 0 32 32" width="24" height="24" fill="none"><rect x="11" y="3" width="10" height="15" rx="5" fill="#c8c6c2" stroke="#3d3a36" stroke-width="1.6"/><rect x="13.5" y="5.5" width="2" height="5" rx="1" fill="white" fill-opacity="0.6"/><path d="M7 16.5C7 21.2 9.2 24 16 24C22.8 24 25 21.2 25 16.5" stroke="#3d3a36" stroke-width="2" stroke-linecap="round" fill="none"/><line x1="16" y1="24" x2="16" y2="28" stroke="#3d3a36" stroke-width="2" stroke-linecap="round"/><line x1="11" y1="28" x2="21" y2="28" stroke="#3d3a36" stroke-width="2" stroke-linecap="round"/></svg>';
+    html += '</button></div>';
+  }
+  document.getElementById('pubContent').innerHTML = html;
+  document.getElementById('pubMo').classList.add('on');
+}
+function closePubMo(e) {
+  if(!e || e.target===e.currentTarget) document.getElementById('pubMo').classList.remove('on');
+}
+
+function exportData() {
+  if(!books.length) { showToast('還沒有書本資料'); return; }
+  var data = {version:1, date: new Date().toISOString(), books: books};
+  var json = JSON.stringify(data, null, 2);
+  var blob = new Blob([json], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = '書本紀錄備份.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  var now = new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'numeric',day:'numeric'});
+  localStorage.setItem('lastBackup', now);
+  updateLastBackup();
+  showToast('✓ 已匯出 ' + books.length + ' 本書的備份');
+}
+
+function importData(e) {
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var data = JSON.parse(ev.target.result);
+      var imported = data.books || data;
+      if(!Array.isArray(imported)) { showToast('檔案格式錯誤'); return; }
+      if(confirm('匯入後會覆蓋現有 ' + books.length + ' 本書的資料，確定嗎？')) {
+        books = imported;
+        saveBooks();
+        showToast('✓ 已還原 ' + books.length + ' 本書');
+        renderStats();
+      }
+    } catch(err) {
+      showToast('讀取失敗，請確認檔案格式');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function updateLastBackup() {
+  var el = document.getElementById('lastBackup');
+  if(!el) return;
+  var d = localStorage.getItem('lastBackup');
+  if(el) el.textContent = d || '尚未備份';
+}
+
+var _tt;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(_tt); _tt = setTimeout(function(){t.classList.remove('on');}, 2500);
+}
+
+if(window.speechSynthesis) window.speechSynthesis.getVoices();
+loadBooks(); updateCount();
+</script>
+
+</body>
+</html>
