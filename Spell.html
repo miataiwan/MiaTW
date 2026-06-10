@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ㄅㄆㄇ拼拼看">
+<meta name="theme-color" content="#FF6B9D">
+<title>ㄅㄆㄇ拼拼看 🌟</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+:root {
+  --pink:#FF6B9D; --purple:#9B59B6; --blue:#5DADE2;
+  --yellow:#F7DC6F; --green:#58D68D; --orange:#F0A500;
+  --red:#E74C3C; --bg:#FFF5F9; --card:#FFFFFF; --text:#2C3E50; --soft:#F8E8F0;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Nunito','Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;user-select:none;}
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* HOME */
+#home{background:linear-gradient(160deg,#FF6B9D 0%,#C850C0 50%,#4158D0 100%);align-items:center;justify-content:center;padding:24px 20px;}
+.home-hero{text-align:center;color:white;margin-bottom:32px;}
+.home-title{font-size:52px;font-weight:900;letter-spacing:8px;text-shadow:0 4px 20px rgba(0,0,0,.2);animation:bounce 2s ease-in-out infinite;display:block;}
+.home-subtitle{font-size:19px;font-weight:600;opacity:.9;margin-top:6px;}
+.stars-row{font-size:26px;margin:10px 0;animation:twinkle 1.5s ease-in-out infinite alternate;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+@keyframes twinkle{from{opacity:.7}to{opacity:1}}
+
+/* UNIT SELECTOR */
+.unit-scroll{width:100%;max-width:420px;margin-bottom:18px;}
+.unit-scroll-label{color:rgba(255,255,255,.85);font-size:13px;font-weight:700;margin-bottom:8px;text-align:center;}
+.unit-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+.unit-chip{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.45);color:white;border-radius:50px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.unit-chip.active,.unit-chip:active{background:white;color:var(–purple);}
+
+/* START BUTTON */
+.start-btn{background:white;color:var(–purple);border:none;border-radius:50px;padding:16px 52px;font-size:20px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 8px 28px rgba(0,0,0,.2);margin-top:8px;transition:transform .15s;}
+.start-btn:active{transform:scale(.96);}
+.word-count-badge{color:rgba(255,255,255,.8);font-size:13px;margin-top:10px;font-weight:600;}
+
+/* GAME HEADER */
+#game{background:var(–bg);}
+.game-header{background:white;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 12px rgba(0,0,0,.08);position:sticky;top:0;z-index:10;}
+.back-btn{width:36px;height:36px;background:var(–soft);border:none;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.progress-wrap{flex:1;}
+.progress-bar{height:10px;background:#EEE;border-radius:10px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(–pink),var(–purple));border-radius:10px;transition:width .4s ease;}
+.progress-text{font-size:11px;color:#AAA;margin-top:2px;text-align:right;}
+.score-badge{background:var(–yellow);border-radius:50px;padding:4px 12px;font-weight:800;font-size:14px;flex-shrink:0;}
+
+/* QUESTION AREA */
+.question-area{flex:1;display:flex;flex-direction:column;align-items:center;padding:16px 16px 0;}
+.q-label{background:var(–soft);color:var(–pink);border-radius:50px;padding:4px 14px;font-size:13px;font-weight:700;margin-bottom:14px;}
+.speak-card{background:white;border:3px solid var(–pink);border-radius:24px;padding:18px 28px;cursor:pointer;box-shadow:0 6px 20px rgba(255,107,157,.22);transition:transform .15s;margin-bottom:10px;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;max-width:320px;}
+.speak-card:active{transform:scale(.97);}
+.speak-card.speaking{animation:pulse .6s ease-in-out infinite alternate;border-color:var(–purple);background:var(–soft);}
+@keyframes pulse{from{box-shadow:0 6px 20px rgba(155,89,182,.3)}to{box-shadow:0 6px 40px rgba(155,89,182,.6)}}
+.speak-card .char{font-size:68px;font-weight:900;line-height:1.1;}
+.speak-card .hint-text{font-size:13px;color:#AAA;}
+.feedback-bar{font-size:15px;font-weight:700;min-height:24px;margin-bottom:4px;color:#888;}
+
+/* KEYBOARD */
+.keyboard-area{background:#EDEEF2;padding:10px 6px 28px;width:100%;}
+.input-display{background:white;border-radius:14px;padding:10px 14px;margin:0 6px 8px;font-size:30px;font-weight:800;min-height:52px;display:flex;align-items:center;gap:6px;border:3px solid #DDD;color:var(–text);transition:border-color .3s,background .3s;}
+.input-display .cursor{width:2px;height:30px;background:var(–pink);animation:blink 1s step-end infinite;flex-shrink:0;}
+@keyframes blink{50%{opacity:0}}
+.bopo-rows{display:flex;flex-direction:column;gap:5px;}
+.bopo-row{display:flex;justify-content:center;gap:4px;}
+.bopo-key{background:white;border:2px solid #CCC;border-bottom:3px solid #BBB;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 3px rgba(0,0,0,.08);transition:all .1s;font-family:inherit;color:var(–text);padding:0;width:38px;height:38px;flex-shrink:0;}
+.bopo-key:active{transform:translateY(1px);box-shadow:none;border-bottom-width:2px;background:var(–soft);}
+.bopo-key.tone-key{background:#FFF0F5;border-color:#FFB3D1;}
+.bopo-key.delete-key{background:#FFF0F5;border-color:#FFB3D1;font-size:18px;width:50px;}
+.bopo-key.submit-key{background:var(–green);border-color:#27AE60;color:white;font-size:22px;width:64px;}
+
+/* TAB BAR */
+.tab-bar{display:flex;background:white;border-radius:50px;padding:4px;gap:4px;margin-bottom:24px;box-shadow:0 4px 16px rgba(0,0,0,.15);}
+.tab-btn{flex:1;border:none;border-radius:50px;padding:10px 0;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;color:rgba(255,255,255,.7);background:transparent;transition:all .2s;}
+.tab-btn.active{background:white;color:var(–purple);box-shadow:0 2px 8px rgba(0,0,0,.12);}
+
+/* CUSTOM SCREEN */
+#custom{background:linear-gradient(160deg,#FF6B9D 0%,#C850C0 50%,#4158D0 100%);padding:20px 16px 32px;align-items:center;}
+.custom-header{color:white;text-align:center;margin-bottom:20px;}
+.custom-header h2{font-size:24px;font-weight:900;margin-bottom:4px;}
+.custom-header p{font-size:13px;opacity:.85;}
+.custom-card{background:white;border-radius:20px;padding:20px;width:100%;max-width:420px;margin-bottom:14px;box-shadow:0 8px 24px rgba(0,0,0,.12);}
+.custom-card h3{font-size:15px;font-weight:800;color:var(–purple);margin-bottom:14px;}
+.input-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+.input-row label{font-size:13px;font-weight:700;color:#888;width:32px;flex-shrink:0;}
+.text-input{flex:1;border:2px solid #EEE;border-radius:10px;padding:10px 12px;font-size:18px;font-family:inherit;color:var(–text);outline:none;transition:border-color .2s;}
+.text-input:focus{border-color:var(–pink);}
+.add-btn{background:linear-gradient(135deg,var(–pink),var(–purple));color:white;border:none;border-radius:12px;padding:12px 20px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;width:100%;margin-top:4px;box-shadow:0 4px 12px rgba(255,107,157,.3);}
+.add-btn:active{transform:scale(.97);}
+.custom-list{width:100%;max-width:420px;display:flex;flex-direction:column;gap:8px;margin-bottom:80px;}
+.custom-item{background:white;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 3px 10px rgba(0,0,0,.08);}
+.custom-item .item-char{font-size:28px;font-weight:900;color:var(–text);min-width:36px;}
+.custom-item .item-bopo{font-size:16px;color:var(–purple);font-weight:700;flex:1;}
+.custom-item .del-btn{background:#FFF0F5;border:none;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer;color:var(–red);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.custom-empty{color:rgba(255,255,255,.7);font-size:14px;text-align:center;padding:20px;}
+.play-custom-btn{background:white;color:var(–purple);border:none;border-radius:50px;padding:14px 40px;font-size:18px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(0,0,0,.15);position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:none;white-space:nowrap;}
+
+/* RESULT OVERLAY */
+.result-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px);}
+.result-overlay.show{display:flex;}
+.result-card{background:white;border-radius:28px;padding:34px 26px;text-align:center;max-width:320px;width:90%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.result-emoji{font-size:68px;display:block;margin-bottom:10px;}
+.result-title{font-size:26px;font-weight:900;margin-bottom:6px;}
+.result-score{font-size:17px;color:#888;margin-bottom:20px;}
+.result-stars{font-size:34px;letter-spacing:8px;margin-bottom:22px;}
+.result-btns{display:flex;flex-direction:column;gap:10px;}
+.result-btn{border:none;border-radius:50px;padding:13px 20px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;display:block;width:100%;}
+.result-btn.primary{background:linear-gradient(135deg,var(–pink),var(–purple));color:white;box-shadow:0 6px 20px rgba(255,107,157,.4);}
+.result-btn.secondary{background:var(–soft);color:var(–purple);}
+
+/* CONFETTI */
+.confetti-container{position:fixed;inset:0;pointer-events:none;z-index:200;}
+.confetti-piece{position:absolute;border-radius:2px;animation:confettiFall var(–dur) ease-in forwards;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* correct/wrong flash */
+.input-display.correct{border-color:var(–green)!important;background:#E8F8EF!important;}
+.input-display.wrong{border-color:var(–red)!important;background:#FDEDEC!important;animation:shakeInput .4s ease;}
+@keyframes shakeInput{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+</style>
+
+</head>
+<body>
+
+<!-- HOME -->
+
+<div class="screen active" id="home">
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabCourse" onclick="switchTab('course')">📚 課次</button>
+    <button class="tab-btn" id="tabCustom" onclick="switchTab('custom')">✏️ 自訂</button>
+  </div>
+
+  <!-- 課次面板 -->
+
+  <div id="panelCourse">
+  <div class="home-hero">
+    <span class="home-title">ㄅㄆㄇ</span>
+    <div class="stars-row">⭐🌟✨🌟⭐</div>
+    <div class="home-subtitle">拼拼看！小一注音練習</div>
+  </div>
+
+  <div class="unit-scroll">
+    <div class="unit-scroll-label">📚 選擇課次（可多選）</div>
+    <div class="unit-chips" id="unitChips"></div>
+  </div>
+
+<button class="start-btn" id="startBtn" onclick="startGame()">開始遊戲 🎮</button>
+
+  <div class="word-count-badge" id="wordCountBadge">已選 0 個字</div>
+  </div><!-- /panelCourse -->
+
+  <!-- 自訂面板 -->
+
+  <div id="panelCustom" style="display:none;width:100%;display:none;flex-direction:column;align-items:center;">
+    <div class="custom-header">
+      <h2>✏️ 自訂單字</h2>
+      <p>加入你想練習的字，隨時可以刪除</p>
+    </div>
+    <div class="custom-card">
+      <h3>新增單字／詞</h3>
+      <div class="input-row">
+        <label>字</label>
+        <input class="text-input" id="inputChar" placeholder="例：蝴蝶" maxlength="6">
+      </div>
+      <div class="input-row">
+        <label>注音</label>
+        <input class="text-input" id="inputBopo" placeholder="例：ㄏㄨˊㄉㄧㄝˊ" maxlength="20">
+      </div>
+      <button class="add-btn" onclick="addCustomWord()">＋ 新增</button>
+    </div>
+    <div class="custom-list" id="customList"></div>
+  </div>
+
+<button class="play-custom-btn" id="playCustomBtn" onclick="startCustomGame()">▶ 開始練習自訂字</button>
+
+</div>
+
+<!-- GAME -->
+
+<div class="screen" id="game">
+  <div class="game-header">
+    <button class="back-btn" id="backBtn">←</button>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-text" id="progressText">0 / 0</div>
+    </div>
+    <div class="score-badge">⭐ <span id="scoreDisplay">0</span></div>
+  </div>
+  <div class="question-area" id="questionArea"></div>
+  <div class="keyboard-area" id="keyboardArea">
+    <div class="input-display" id="inputDisplay">
+      <span id="inputText"></span><div class="cursor"></div>
+    </div>
+    <div class="bopo-rows" id="bopoRows"></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card">
+    <span class="result-emoji" id="resultEmoji">🎉</span>
+    <div class="result-title" id="resultTitle">太棒了！</div>
+    <div class="result-score" id="resultScore">答對 8 / 10 題</div>
+    <div class="result-stars" id="resultStars">⭐⭐⭐</div>
+    <div class="result-btns">
+      <button class="result-btn primary" id="resultAgainBtn">再玩一次！</button>
+      <button class="result-btn secondary" onclick="goHome()">回選課次</button>
+    </div>
+  </div>
+</div>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+// =====================================================================
+// 一年級國語生字表
+// =====================================================================
+var UNITS = [
+  {id:'u1',label:'第1課',name:'小小羊',words:[
+    {char:'羊',bopo:'ㄧㄤˊ'},{char:'小',bopo:'ㄒㄧㄠˇ'},{char:'出',bopo:'ㄔㄨ'},
+    {char:'去',bopo:'ㄑㄩˋ'},{char:'高',bopo:'ㄍㄠ'},{char:'大',bopo:'ㄉㄚˋ'},{char:'門',bopo:'ㄇㄣˊ'}
+  ]},
+  {id:'u2',label:'第2課',name:'奶奶家',words:[
+    {char:'走',bopo:'ㄗㄡˇ'},{char:'一',bopo:'ㄧ'},{char:'起',bopo:'ㄑㄧˇ'},
+    {char:'看',bopo:'ㄎㄢˋ'},{char:'見',bopo:'ㄐㄧㄢˋ'},{char:'路',bopo:'ㄌㄨˋ'},{char:'家',bopo:'ㄐㄧㄚ'}
+  ]},
+  {id:'u3',label:'第3課',name:'種花',words:[
+    {char:'水',bopo:'ㄕㄨㄟˇ'},{char:'長',bopo:'ㄓㄤˇ'},{char:'多',bopo:'ㄉㄨㄛ'},
+    {char:'好',bopo:'ㄏㄠˇ'},{char:'種',bopo:'ㄓㄨㄥˋ'},{char:'花',bopo:'ㄏㄨㄚ'},{char:'草',bopo:'ㄘㄠˇ'}
+  ]},
+  {id:'u4',label:'第4課',name:'請問',words:[
+    {char:'請',bopo:'ㄑㄧㄥˇ'},{char:'問',bopo:'ㄨㄣˋ'},{char:'你',bopo:'ㄋㄧˇ'},
+    {char:'有',bopo:'ㄧㄡˇ'},{char:'星',bopo:'ㄒㄧㄥ'},{char:'月',bopo:'ㄩㄝˋ'},{char:'亮',bopo:'ㄌㄧㄤˋ'}
+  ]},
+  {id:'u5',label:'第5課',name:'七彩滑梯',words:[
+    {char:'能',bopo:'ㄋㄥˊ'},{char:'上',bopo:'ㄕㄤˋ'},{char:'下',bopo:'ㄒㄧㄚˋ'},
+    {char:'七',bopo:'ㄑㄧ'},{char:'紅',bopo:'ㄏㄨㄥˊ'},{char:'黃',bopo:'ㄏㄨㄤˊ'}
+  ]},
+  {id:'u6',label:'第6課',name:'秋千',words:[
+    {char:'找',bopo:'ㄓㄠˇ'},{char:'天',bopo:'ㄊㄧㄢ'},{char:'空',bopo:'ㄎㄨㄥ'},
+    {char:'說',bopo:'ㄕㄨㄛ'},{char:'話',bopo:'ㄏㄨㄚˋ'},{char:'早',bopo:'ㄗㄠˇ'},{char:'白',bopo:'ㄅㄞˊ'}
+  ]},
+  {id:'u7',label:'第7課',name:'回音',words:[
+    {char:'也',bopo:'ㄧㄝˇ'},{char:'心',bopo:'ㄒㄧㄣ'},{char:'開',bopo:'ㄎㄞ'},
+    {char:'人',bopo:'ㄖㄣˊ'},{char:'回',bopo:'ㄏㄨㄟˊ'},{char:'音',bopo:'ㄧㄣ'}
+  ]},
+  {id:'u8',label:'第8課',name:'玩沙',words:[
+    {char:'沙',bopo:'ㄕㄚ'},{char:'玩',bopo:'ㄨㄢˊ'},{char:'做',bopo:'ㄗㄨㄛˋ'},
+    {char:'城',bopo:'ㄔㄥˊ'},{char:'堡',bopo:'ㄅㄠˇ'},{char:'蓋',bopo:'ㄍㄞˋ'}
+  ]},
+  {id:'u9',label:'第9課',name:'小蜜蜂',words:[
+    {char:'蜂',bopo:'ㄈㄥ'},{char:'蜜',bopo:'ㄇㄧˋ'},{char:'飛',bopo:'ㄈㄟ'},
+    {char:'採',bopo:'ㄘㄞˇ'},{char:'忙',bopo:'ㄇㄤˊ'}
+  ]},
+  {id:'u10',label:'第10課',name:'吃東西',words:[
+    {char:'吃',bopo:'ㄔ'},{char:'東',bopo:'ㄉㄨㄥ'},{char:'西',bopo:'ㄒㄧ'},
+    {char:'米',bopo:'ㄇㄧˇ'},{char:'飯',bopo:'ㄈㄢˋ'},{char:'麵',bopo:'ㄇㄧㄢˋ'},{char:'菜',bopo:'ㄘㄞˋ'},{char:'湯',bopo:'ㄊㄤ'}
+  ]},
+  {id:'u11',label:'第11課',name:'快樂的一天',words:[
+    {char:'快',bopo:'ㄎㄨㄞˋ'},{char:'樂',bopo:'ㄌㄜˋ'},{char:'今',bopo:'ㄐㄧㄣ'},
+    {char:'我',bopo:'ㄨㄛˇ'},{char:'和',bopo:'ㄏㄜˊ'}
+  ]},
+  {id:'u12',label:'第12課',name:'日月潭',words:[
+    {char:'日',bopo:'ㄖˋ'},{char:'潭',bopo:'ㄊㄢˊ'},{char:'美',bopo:'ㄇㄟˇ'},
+    {char:'湖',bopo:'ㄏㄨˊ'},{char:'島',bopo:'ㄉㄠˇ'},{char:'山',bopo:'ㄕㄢ'}
+  ]},
+  {id:'u13',label:'第13課',name:'動物園',words:[
+    {char:'動',bopo:'ㄉㄨㄥˋ'},{char:'物',bopo:'ㄨˋ'},{char:'園',bopo:'ㄩㄢˊ'},
+    {char:'獅',bopo:'ㄕ'},{char:'象',bopo:'ㄒㄧㄤˋ'},{char:'熊',bopo:'ㄒㄩㄥˊ'},{char:'猴',bopo:'ㄏㄡˊ'}
+  ]},
+  {id:'u14',label:'第14課',name:'下雨了',words:[
+    {char:'雨',bopo:'ㄩˇ'},{char:'傘',bopo:'ㄙㄢˇ'},{char:'跳',bopo:'ㄊㄧㄠˋ'},{char:'濕',bopo:'ㄕ'}
+  ]},
+  {id:'u15',label:'第15課',name:'寫字',words:[
+    {char:'寫',bopo:'ㄒㄧㄝˇ'},{char:'字',bopo:'ㄗˋ'},{char:'筆',bopo:'ㄅㄧˇ'},
+    {char:'書',bopo:'ㄕㄨ'},{char:'紙',bopo:'ㄓˇ'},{char:'練',bopo:'ㄌㄧㄢˋ'},{char:'習',bopo:'ㄒㄧˊ'}
+  ]},
+  {id:'u16',label:'第16課',name:'好朋友',words:[
+    {char:'朋',bopo:'ㄆㄥˊ'},{char:'友',bopo:'ㄧㄡˇ'},{char:'笑',bopo:'ㄒㄧㄠˋ'},
+    {char:'喜',bopo:'ㄒㄧˇ'},{char:'分',bopo:'ㄈㄣ'},{char:'享',bopo:'ㄒㄧㄤˇ'}
+  ]}
+];
+
+var BOPO_LAYOUT = [
+  ['ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ'],
+  ['ㄍ','ㄎ','ㄏ','ㄐ','ㄑ','ㄒ','ㄓ','ㄔ'],
+  ['ㄕ','ㄖ','ㄗ','ㄘ','ㄙ','ㄧ','ㄨ','ㄩ'],
+  ['ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ'],
+  ['ㄢ','ㄣ','ㄤ','ㄥ','ㄦ','ˊ','ˇ','ˋ','˙']
+];
+var TONES = ['ˊ','ˇ','ˋ','˙'];
+
+// 注音符號 → 各聲調代表漢字 [一聲, 二聲, 三聲, 四聲, 輕聲]
+var TONE_NAMES = {'ˊ':'二聲','ˇ':'三聲','ˋ':'四聲','˙':'輕聲'};
+
+// ── STATE ──
+var state = {
+  selectedUnits: [],
+  questions: [],
+  current: 0,
+  score: 0,
+  typed: '',
+  answered: false,
+  total: 0
+};
+
+// =====================================================================
+// AUDIO  (ES5, no arrow functions, no const/let)
+// =====================================================================
+var audioCtx = null;
+var audioUnlocked = false;
+
+function getACtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+  return audioCtx;
+}
+
+function unlockAudio() {
+  if (audioUnlocked) { return; }
+  audioUnlocked = true;
+  getACtx();
+}
+document.addEventListener('touchstart', unlockAudio);
+document.addEventListener('mousedown', unlockAudio);
+
+function playTone(freq, type, dur, vol) {
+  vol = vol || 0.3;
+  try {
+    var ctx = getACtx();
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    o.start();
+    o.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+
+function sfxCorrect() {
+  playTone(523, 'sine', 0.12, 0.28);
+  setTimeout(function(){ playTone(659, 'sine', 0.12, 0.28); }, 120);
+  setTimeout(function(){ playTone(784, 'sine', 0.28, 0.32); }, 240);
+}
+function sfxWrong() {
+  playTone(250, 'sawtooth', 0.12, 0.25);
+  setTimeout(function(){ playTone(180, 'sawtooth', 0.22, 0.25); }, 150);
+}
+function sfxClick() { playTone(700, 'sine', 0.06, 0.15); }
+function sfxCelebrate() {
+  var notes = [523,659,784,1047,784,1047,1319];
+  for (var i = 0; i < notes.length; i++) {
+    (function(n, delay){ setTimeout(function(){ playTone(n,'sine',0.18,0.28); }, delay); })(notes[i], i*90);
+  }
+}
+
+// =====================================================================
+// SPEECH
+// =====================================================================
+function speak(text, rate) {
+  if (!window.speechSynthesis) { return; }
+  rate = rate || 0.82;
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW';
+  u.rate = rate;
+  u.pitch = 1.15;
+  window.speechSynthesis.speak(u);
+}
+
+// 注音組合 → 代表漢字 [一聲, 二聲, 三聲, 四聲, 輕聲]
+var BOPO_WORD = {
+  'ㄅ':['ㄅ','ㄅ','ㄅ','ㄅ','ㄅ'],
+  'ㄅㄚ':['巴','拔','把','爸','吧'],
+  'ㄅㄛ':['波','波','跛','播','啵'],
+  'ㄅㄞ':['掰','白','擺','敗','吧'],
+  'ㄅㄟ':['杯','倍','貝','被','吧'],
+  'ㄅㄢ':['班','辦','板','辦','吧'],
+  'ㄅㄣ':['奔','本','笨','笨','吧'],
+  'ㄅㄤ':['幫','旁','綁','棒','吧'],
+  'ㄅㄥ':['崩','朋','迸','蹦','吧'],
+  'ㄅㄧ':['逼','鼻','比','必','吧'],
+  'ㄅㄧㄝ':['鱉','別','鱉','別','吧'],
+  'ㄅㄧㄢ':['邊','邊','扁','便','吧'],
+  'ㄅㄧㄠ':['標','表','表','標','吧'],
+  'ㄅㄧㄥ':['冰','病','餅','病','吧'],
+  'ㄅㄨ':['不','步','補','部','吧'],
+  'ㄆㄚ':['趴','爬','怕','爬','啊'],
+  'ㄆㄛ':['坡','婆','頗','破','啊'],
+  'ㄆㄞ':['拍','牌','派','派','啊'],
+  'ㄆㄟ':['胚','賠','胚','配','啊'],
+  'ㄆㄢ':['攀','盤','判','判','啊'],
+  'ㄆㄣ':['噴','盆','噴','噴','啊'],
+  'ㄆㄤ':['乓','旁','耪','胖','啊'],
+  'ㄆㄥ':['砰','朋','捧','碰','啊'],
+  'ㄆㄧ':['批','皮','匹','屁','啊'],
+  'ㄆㄧㄢ':['篇','便','片','騙','啊'],
+  'ㄆㄧㄠ':['飄','漂','票','票','啊'],
+  'ㄆㄧㄥ':['乒','平','品','品','啊'],
+  'ㄆㄨ':['撲','葡','普','鋪','啊'],
+  'ㄇㄚ':['媽','麻','馬','罵','嗎'],
+  'ㄇㄛ':['摸','模','抹','墨','嗎'],
+  'ㄇㄞ':['買','埋','買','賣','嗎'],
+  'ㄇㄟ':['沒','梅','每','妹','嗎'],
+  'ㄇㄢ':['慢','蠻','滿','慢','嗎'],
+  'ㄇㄣ':['悶','門','們','悶','嗎'],
+  'ㄇㄤ':['忙','忙','莽','冒','嗎'],
+  'ㄇㄥ':['矇','萌','猛','夢','嗎'],
+  'ㄇㄧ':['咪','迷','米','秘','嗎'],
+  'ㄇㄧㄢ':['棉','眠','免','面','嗎'],
+  'ㄇㄧㄠ':['喵','苗','秒','妙','嗎'],
+  'ㄇㄧㄥ':['明','名','命','命','嗎'],
+  'ㄇㄨ':['模','木','木','墓','嗎'],
+  'ㄈㄚ':['發','罰','法','罰','啊'],
+  'ㄈㄟ':['飛','肥','廢','費','啊'],
+  'ㄈㄢ':['翻','煩','反','飯','啊'],
+  'ㄈㄣ':['分','墳','粉','份','啊'],
+  'ㄈㄤ':['方','房','紡','放','啊'],
+  'ㄈㄥ':['風','縫','諷','奉','啊'],
+  'ㄈㄨ':['夫','符','府','父','啊'],
+  'ㄉㄚ':['搭','達','打','大','啊'],
+  'ㄉㄛ':['哆','哆','哆','哆','啊'],
+  'ㄉㄜ':['得','得','得','得','的'],
+  'ㄉㄞ':['呆','代','帶','代','啊'],
+  'ㄉㄟ':['得','得','得','得','啊'],
+  'ㄉㄠ':['刀','道','倒','到','啊'],
+  'ㄉㄡ':['兜','豆','斗','豆','啊'],
+  'ㄉㄢ':['擔','蛋','膽','但','啊'],
+  'ㄉㄤ':['當','當','黨','當','啊'],
+  'ㄉㄥ':['燈','等','等','凳','啊'],
+  'ㄉㄧ':['低','敵','底','地','啊'],
+  'ㄉㄧㄢ':['顛','電','點','店','啊'],
+  'ㄉㄧㄠ':['掉','吊','掉','掉','啊'],
+  'ㄉㄧㄥ':['丁','頂','鼎','定','啊'],
+  'ㄉㄨ':['都','讀','賭','度','啊'],
+  'ㄉㄨㄟ':['堆','對','兌','對','啊'],
+  'ㄉㄨㄢ':['端','斷','短','段','啊'],
+  'ㄉㄨㄥ':['東','動','懂','動','啊'],
+  'ㄊㄚ':['他','塔','塔','踏','啊'],
+  'ㄊㄜ':['特','特','特','特','啊'],
+  'ㄊㄞ':['台','台','太','太','啊'],
+  'ㄊㄠ':['掏','桃','討','套','啊'],
+  'ㄊㄡ':['偷','頭','透','透','啊'],
+  'ㄊㄢ':['貪','壇','毯','探','啊'],
+  'ㄊㄤ':['湯','堂','躺','燙','啊'],
+  'ㄊㄥ':['疼','疼','疼','疼','啊'],
+  'ㄊㄧ':['梯','蹄','體','替','啊'],
+  'ㄊㄧㄢ':['天','田','舔','天','啊'],
+  'ㄊㄧㄠ':['挑','條','跳','跳','啊'],
+  'ㄊㄧㄥ':['聽','停','挺','聽','啊'],
+  'ㄊㄨ':['突','圖','土','兔','啊'],
+  'ㄊㄨㄟ':['推','腿','退','退','啊'],
+  'ㄊㄨㄣ':['吞','吞','褪','褪','啊'],
+  'ㄊㄨㄥ':['通','同','桶','痛','啊'],
+  'ㄋㄚ':['拿','哪','那','納','啊'],
+  'ㄋㄜ':['呢','呢','呢','呢','呢'],
+  'ㄋㄞ':['哪','奈','奶','奈','啊'],
+  'ㄋㄠ':['撓','鬧','腦','鬧','啊'],
+  'ㄋㄡ':['呢','呢','呢','呢','啊'],
+  'ㄋㄢ':['難','男','腦','難','啊'],
+  'ㄋㄥ':['能','能','能','能','啊'],
+  'ㄋㄧ':['妮','泥','你','膩','啊'],
+  'ㄋㄧㄢ':['年','念','念','念','啊'],
+  'ㄋㄧㄠ':['鳥','鳥','鳥','尿','啊'],
+  'ㄋㄧㄥ':['寧','寧','擰','寧','啊'],
+  'ㄋㄨ':['奴','怒','努','怒','啊'],
+  'ㄋㄩ':['女','女','女','女','啊'],
+  'ㄌㄚ':['啦','辣','喇','辣','啊'],
+  'ㄌㄜ':['勒','勒','勒','了','了'],
+  'ㄌㄞ':['來','來','賴','賴','啊'],
+  'ㄌㄠ':['撈','老','老','澇','啊'],
+  'ㄌㄡ':['樓','樓','漏','漏','啊'],
+  'ㄌㄢ':['藍','攔','懶','爛','啊'],
+  'ㄌㄤ':['啷','廊','朗','浪','啊'],
+  'ㄌㄥ':['冷','冷','冷','楞','啊'],
+  'ㄌㄧ':['哩','離','裡','力','啊'],
+  'ㄌㄧㄢ':['連','連','臉','練','啊'],
+  'ㄌㄧㄠ':['撩','了','了','了','啊'],
+  'ㄌㄧㄥ':['零','靈','嶺','令','啊'],
+  'ㄌㄨ':['盧','路','魯','路','啊'],
+  'ㄌㄨㄢ':['亂','亂','卵','亂','啊'],
+  'ㄌㄨㄣ':['論','輪','論','論','啊'],
+  'ㄌㄨㄥ':['龍','隆','壟','弄','啊'],
+  'ㄌㄩ':['呂','旅','旅','綠','啊'],
+  'ㄍㄜ':['哥','哥','葛','個','啊'],
+  'ㄍㄞ':['該','蓋','改','蓋','啊'],
+  'ㄍㄠ':['高','高','稿','告','啊'],
+  'ㄍㄡ':['勾','狗','狗','夠','啊'],
+  'ㄍㄢ':['干','甘','感','幹','啊'],
+  'ㄍㄤ':['剛','港','港','鋼','啊'],
+  'ㄍㄥ':['更','更','梗','更','啊'],
+  'ㄍㄨ':['姑','古','鼓','固','啊'],
+  'ㄍㄨㄚ':['瓜','刮','寡','掛','啊'],
+  'ㄍㄨㄛ':['鍋','國','果','過','啊'],
+  'ㄍㄨㄞ':['乖','乖','拐','怪','啊'],
+  'ㄍㄨㄢ':['關','管','管','貫','啊'],
+  'ㄍㄨㄤ':['光','狂','廣','逛','啊'],
+  'ㄍㄨㄥ':['工','弓','拱','貢','啊'],
+  'ㄎㄜ':['科','可','可','課','啊'],
+  'ㄎㄞ':['開','開','凱','開','啊'],
+  'ㄎㄠ':['烤','烤','考','靠','啊'],
+  'ㄎㄡ':['摳','口','口','扣','啊'],
+  'ㄎㄢ':['刊','看','砍','看','啊'],
+  'ㄎㄤ':['康','抗','慷','抗','啊'],
+  'ㄎㄥ':['坑','坑','坑','坑','啊'],
+  'ㄎㄨ':['哭','苦','苦','酷','啊'],
+  'ㄎㄨㄚ':['誇','誇','垮','跨','啊'],
+  'ㄎㄨㄞ':['快','塊','快','快','啊'],
+  'ㄎㄨㄢ':['寬','款','款','寬','啊'],
+  'ㄎㄨㄥ':['空','空','孔','控','啊'],
+  'ㄏㄜ':['喝','和','喝','喝','啊'],
+  'ㄏㄞ':['嗨','還','海','害','啊'],
+  'ㄏㄠ':['好','好','好','好','啊'],
+  'ㄏㄡ':['喉','猴','后','後','啊'],
+  'ㄏㄢ':['憨','寒','喊','漢','啊'],
+  'ㄏㄤ':['夯','行','夯','夯','啊'],
+  'ㄏㄥ':['哼','哼','哼','哼','啊'],
+  'ㄏㄨ':['呼','湖','虎','護','啊'],
+  'ㄏㄨㄚ':['花','花','化','話','啊'],
+  'ㄏㄨㄛ':['活','活','火','貨','啊'],
+  'ㄏㄨㄞ':['懷','壞','壞','壞','啊'],
+  'ㄏㄨㄢ':['歡','還','緩','換','啊'],
+  'ㄏㄨㄤ':['荒','黃','晃','晃','啊'],
+  'ㄏㄨㄥ':['轟','紅','哄','鬨','啊'],
+  'ㄐㄧ':['機','及','己','記','啊'],
+  'ㄐㄧㄚ':['家','夾','假','架','啊'],
+  'ㄐㄧㄝ':['街','節','姐','借','啊'],
+  'ㄐㄧㄠ':['交','橋','腳','叫','啊'],
+  'ㄐㄧㄡ':['揪','就','九','就','啊'],
+  'ㄐㄧㄢ':['尖','肩','剪','見','啊'],
+  'ㄐㄧㄣ':['今','金','錦','進','啊'],
+  'ㄐㄧㄤ':['江','薑','講','醬','啊'],
+  'ㄐㄧㄥ':['晶','晶','井','靜','啊'],
+  'ㄐㄩ':['居','局','舉','據','啊'],
+  'ㄐㄩㄝ':['決','絕','角','覺','啊'],
+  'ㄐㄩㄢ':['捐','卷','捲','卷','啊'],
+  'ㄐㄩㄣ':['君','均','菌','俊','啊'],
+  'ㄑㄧ':['期','奇','起','去','啊'],
+  'ㄑㄧㄚ':['掐','掐','洽','掐','啊'],
+  'ㄑㄧㄝ':['切','切','且','切','啊'],
+  'ㄑㄧㄠ':['敲','橋','巧','竅','啊'],
+  'ㄑㄧㄡ':['秋','球','求','秋','啊'],
+  'ㄑㄧㄢ':['千','前','淺','欠','啊'],
+  'ㄑㄧㄣ':['親','琴','請','慶','啊'],
+  'ㄑㄧㄤ':['槍','強','搶','強','啊'],
+  'ㄑㄧㄥ':['青','情','請','慶','啊'],
+  'ㄑㄩ':['區','渠','取','去','啊'],
+  'ㄑㄩㄝ':['缺','卻','缺','確','啊'],
+  'ㄑㄩㄢ':['圈','全','犬','勸','啊'],
+  'ㄒㄧ':['希','席','洗','戲','啊'],
+  'ㄒㄧㄚ':['蝦','峽','下','夏','啊'],
+  'ㄒㄧㄝ':['些','鞋','寫','謝','啊'],
+  'ㄒㄧㄠ':['消','消','小','笑','啊'],
+  'ㄒㄧㄡ':['休','修','朽','秀','啊'],
+  'ㄒㄧㄢ':['先','閒','顯','現','啊'],
+  'ㄒㄧㄣ':['心','新','信','信','啊'],
+  'ㄒㄧㄤ':['香','翔','響','向','啊'],
+  'ㄒㄧㄥ':['星','行','醒','姓','啊'],
+  'ㄒㄩ':['虛','徐','許','需','啊'],
+  'ㄒㄩㄝ':['雪','學','雪','學','啊'],
+  'ㄒㄩㄢ':['宣','旋','選','選','啊'],
+  'ㄓㄚ':['扎','雜','炸','炸','啊'],
+  'ㄓㄜ':['這','折','者','這','啊'],
+  'ㄓㄞ':['摘','窄','摘','債','啊'],
+  'ㄓㄠ':['招','著','找','照','啊'],
+  'ㄓㄡ':['周','軸','肘','宙','啊'],
+  'ㄓㄢ':['沾','占','展','站','啊'],
+  'ㄓㄤ':['張','長','長','帳','啊'],
+  'ㄓㄥ':['爭','整','整','正','啊'],
+  'ㄓㄨ':['珠','竹','主','住','啊'],
+  'ㄓㄨㄟ':['追','墜','追','墜','啊'],
+  'ㄓㄨㄢ':['專','轉','轉','傳','啊'],
+  'ㄓㄨㄤ':['裝','狀','撞','撞','啊'],
+  'ㄓㄨㄥ':['中','蟲','種','重','啊'],
+  'ㄔㄚ':['叉','茶','差','岔','啊'],
+  'ㄔㄜ':['車','撤','扯','車','啊'],
+  'ㄔㄞ':['拆','柴','拆','拆','啊'],
+  'ㄔㄠ':['抄','朝','吵','炒','啊'],
+  'ㄔㄡ':['抽','稠','醜','臭','啊'],
+  'ㄔㄢ':['攙','纏','產','顫','啊'],
+  'ㄔㄤ':['昌','長','廠','唱','啊'],
+  'ㄔㄥ':['稱','城','逞','稱','啊'],
+  'ㄔㄨ':['出','除','楚','處','啊'],
+  'ㄔㄨㄢ':['穿','船','喘','串','啊'],
+  'ㄔㄨㄤ':['窗','床','闖','創','啊'],
+  'ㄔㄨㄥ':['沖','蟲','寵','衝','啊'],
+  'ㄕㄚ':['沙','紗','傻','剎','啊'],
+  'ㄕㄜ':['奢','社','捨','射','啊'],
+  'ㄕㄞ':['篩','晒','篩','晒','啊'],
+  'ㄕㄠ':['燒','勺','少','哨','啊'],
+  'ㄕㄡ':['收','熟','手','瘦','啊'],
+  'ㄕㄢ':['山','刪','閃','扇','啊'],
+  'ㄕㄤ':['商','裳','賞','上','啊'],
+  'ㄕㄥ':['生','繩','省','盛','啊'],
+  'ㄕㄨ':['書','熟','鼠','樹','啊'],
+  'ㄕㄨㄟ':['水','稅','水','稅','啊'],
+  'ㄕㄨㄢ':['栓','栓','涮','涮','啊'],
+  'ㄕㄨㄤ':['雙','霜','爽','霜','啊'],
+  'ㄖㄜ':['惹','熱','惹','熱','啊'],
+  'ㄖㄠ':['饒','繞','繞','繞','啊'],
+  'ㄖㄡ':['柔','肉','揉','肉','啊'],
+  'ㄖㄢ':['然','然','染','認','啊'],
+  'ㄖㄤ':['讓','讓','嚷','讓','啊'],
+  'ㄖㄥ':['扔','扔','扔','扔','啊'],
+  'ㄖㄨ':['如','入','乳','入','啊'],
+  'ㄖㄨㄟ':['瑞','瑞','瑞','瑞','啊'],
+  'ㄖㄨㄣ':['潤','潤','潤','潤','啊'],
+  'ㄖˋ':['日','日','日','日','日'],
+  'ㄗㄚ':['匝','雜','咋','雜','啊'],
+  'ㄗㄜ':['則','則','澤','責','啊'],
+  'ㄗㄞ':['災','再','在','再','啊'],
+  'ㄗㄠ':['遭','皂','早','造','啊'],
+  'ㄗㄡ':['鄒','走','走','奏','啊'],
+  'ㄗㄢ':['簪','贊','咱','咱','啊'],
+  'ㄗㄤ':['臟','贓','髒','葬','啊'],
+  'ㄗㄥ':['曾','曾','怎','怎','啊'],
+  'ㄗㄨ':['租','族','組','租','啊'],
+  'ㄗㄨㄟ':['嘴','罪','嘴','罪','啊'],
+  'ㄗㄨㄢ':['鑽','鑽','嘴','罪','啊'],
+  'ㄗㄨㄥ':['宗','綜','總','縱','啊'],
+  'ㄗˋ':['字','字','字','字','字'],
+  'ㄘㄚ':['擦','擦','擦','擦','啊'],
+  'ㄘㄜ':['冊','側','測','廁','啊'],
+  'ㄘㄞ':['猜','才','採','菜','啊'],
+  'ㄘㄠ':['操','曹','草','操','啊'],
+  'ㄘㄡ':['湊','湊','湊','湊','啊'],
+  'ㄘㄢ':['參','蠶','慘','燦','啊'],
+  'ㄘㄤ':['倉','藏','藏','藏','啊'],
+  'ㄘㄥ':['層','層','曾','蹭','啊'],
+  'ㄘㄨ':['粗','促','粗','促','啊'],
+  'ㄘㄨㄣ':['村','存','寸','寸','啊'],
+  'ㄘㄨㄥ':['聰','從','叢','促','啊'],
+  'ㄙㄚ':['撒','仨','撒','撒','啊'],
+  'ㄙㄜ':['色','色','瑟','色','啊'],
+  'ㄙㄞ':['腮','鰓','賽','賽','啊'],
+  'ㄙㄠ':['騷','嫂','掃','嫂','啊'],
+  'ㄙㄡ':['搜','叟','叟','嗽','啊'],
+  'ㄙㄢ':['三','散','傘','散','啊'],
+  'ㄙㄤ':['桑','喪','嗓','喪','啊'],
+  'ㄙㄥ':['僧','僧','僧','僧','啊'],
+  'ㄙㄨ':['蘇','俗','素','訴','啊'],
+  'ㄙㄨㄣ':['孫','損','筍','孫','啊'],
+  'ㄙㄨㄥ':['松','竦','聳','送','啊'],
+  'ㄧ':['衣','宜','已','意','一'],
+  'ㄧㄚ':['呀','牙','雅','亞','啊'],
+  'ㄧㄛ':['唷','唷','唷','唷','唷'],
+  'ㄧㄝ':['耶','爺','也','夜','啊'],
+  'ㄧㄠ':['腰','搖','咬','要','啊'],
+  'ㄧㄡ':['優','由','有','又','啊'],
+  'ㄧㄢ':['煙','言','眼','燕','啊'],
+  'ㄧㄣ':['音','銀','引','印','啊'],
+  'ㄧㄤ':['央','羊','養','樣','啊'],
+  'ㄧㄥ':['英','迎','影','應','啊'],
+  'ㄨ':['烏','無','舞','誤','不'],
+  'ㄨㄚ':['挖','娃','瓦','挖','啊'],
+  'ㄨㄛ':['窩','我','我','臥','啊'],
+  'ㄨㄞ':['歪','外','外','外','啊'],
+  'ㄨㄟ':['威','為','尾','胃','啊'],
+  'ㄨㄢ':['彎','完','晚','萬','啊'],
+  'ㄨㄣ':['溫','文','穩','問','啊'],
+  'ㄨㄤ':['汪','王','往','忘','啊'],
+  'ㄨㄥ':['翁','翁','甕','甕','啊'],
+  'ㄩ':['迂','魚','雨','育','啊'],
+  'ㄩㄝ':['噎','月','約','月','啊'],
+  'ㄩㄢ':['冤','元','遠','願','啊'],
+  'ㄩㄣ':['暈','雲','隕','運','啊'],
+  'ㄩㄥ':['擁','用','勇','用','啊']
+};
+var TONE_IDX = {'ˊ':1,'ˇ':2,'ˋ':3,'˙':4};
+
+function bopoToSpeech(bopo) {
+  var toneMarks = ['ˊ','ˇ','ˋ','˙'];
+  var lastChar = bopo.charAt(bopo.length - 1);
+  var hasTone = false;
+  var i;
+  for (i = 0; i < toneMarks.length; i++) {
+    if (toneMarks[i] === lastChar) { hasTone = true; break; }
+  }
+  var toneName = hasTone ? TONE_NAMES[lastChar] : '一聲';
+  var tIdx = hasTone ? TONE_IDX[lastChar] : 0;
+  var symbols = hasTone ? bopo.slice(0, bopo.length - 1) : bopo;
+  // 查整串注音組合對應的代表字
+  var entry = BOPO_WORD[bopo] || BOPO_WORD[symbols];
+  var speechChar = entry ? entry[tIdx] : symbols;
+  return { speechChars: speechChar, symbols: symbols, toneName: toneName };
+}
+
+function speakQuestion(char) { speak(char, 0.75); }
+
+function splitBopo(symbols) {
+  // 每個注音符號中間插頓號，讓 TTS 分開唸
+  var result = '';
+  for (var i = 0; i < symbols.length; i++) {
+    result += symbols.charAt(i);
+    if (i < symbols.length - 1) { result += '、'; }
+  }
+  return result;
+}
+
+function speakCorrectResult(char, bopo) {
+  var r = bopoToSpeech(bopo);
+  speak('答對了！' + splitBopo(r.symbols) + '、' + char + '、' + r.toneName + '、' + char, 0.75);
+}
+
+function speakWrongResult(char, bopo) {
+  var r = bopoToSpeech(bopo);
+  speak('答錯了。' + splitBopo(r.symbols) + '、' + char + '、' + r.toneName + '、' + char, 0.75);
+}
+
+// =====================================================================
+// HOME
+// =====================================================================
+function buildHome() {
+  var chips = document.getElementById('unitChips');
+  chips.innerHTML = '';
+
+  // 全部課次 button
+  var allBtn = document.createElement('button');
+  allBtn.className = 'unit-chip';
+  allBtn.style.background = 'rgba(255,255,255,0.35)';
+  allBtn.textContent = '✨ 全部課次';
+  allBtn.onclick = function() {
+    sfxClick();
+    var allIds = [];
+    for (var k = 0; k < UNITS.length; k++) { allIds.push(UNITS[k].id); }
+    var allSelected = allIds.length === state.selectedUnits.length;
+    if (allSelected) {
+      state.selectedUnits = [];
+      var cs = chips.querySelectorAll('.unit-chip');
+      for (var x = 0; x < cs.length; x++) { cs[x].classList.remove('active'); }
+    } else {
+      state.selectedUnits = allIds.slice();
+      var cs2 = chips.querySelectorAll('.unit-chip');
+      for (var y = 0; y < cs2.length; y++) { cs2[y].classList.add('active'); }
+    }
+    updateWordCount();
+  };
+  chips.appendChild(allBtn);
+
+  for (var i = 0; i < UNITS.length; i++) {
+    (function(u) {
+      var btn = document.createElement('button');
+      btn.className = 'unit-chip';
+      btn.textContent = u.label + '「' + u.name + '」';
+      btn.onclick = function() {
+        sfxClick();
+        var idx2 = state.selectedUnits.indexOf(u.id);
+        if (idx2 >= 0) {
+          state.selectedUnits.splice(idx2, 1);
+          btn.classList.remove('active');
+        } else {
+          state.selectedUnits.push(u.id);
+          btn.classList.add('active');
+        }
+        updateWordCount();
+      };
+      chips.appendChild(btn);
+    })(UNITS[i]);
+  }
+  updateWordCount();
+}
+
+function updateWordCount() {
+  var words = getSelectedWords();
+  document.getElementById('wordCountBadge').textContent = '已選 ' + words.length + ' 個字';
+}
+
+function getSelectedWords() {
+  var result = [];
+  for (var i = 0; i < UNITS.length; i++) {
+    if (state.selectedUnits.length === 0 || state.selectedUnits.indexOf(UNITS[i].id) >= 0) {
+      for (var j = 0; j < UNITS[i].words.length; j++) {
+        result.push(UNITS[i].words[j]);
+      }
+    }
+  }
+  return result;
+}
+
+// =====================================================================
+// GAME
+// =====================================================================
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function startGame() {
+  var words = getSelectedWords();
+  if (words.length === 0) { speak('請先選擇課次！'); return; }
+  sfxClick();
+  state.questions = shuffle(words);
+  state.total = state.questions.length;
+  state.current = 0;
+  state.score = 0;
+  state.typed = '';
+  state.answered = false;
+
+  document.getElementById('home').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+
+  buildKeyboard();
+  renderQuestion();
+  updateProgress();
+  setTimeout(function(){ speak('開始囉！請輸入這個字的注音！', 0.85); }, 400);
+}
+
+function renderQuestion() {
+  var q = state.questions[state.current];
+  state.answered = false;
+  state.typed = '';
+
+  var area = document.getElementById('questionArea');
+  area.innerHTML =
+    '<div class="q-label">⌨️ 輸入注音</div>' +
+    '<button class="speak-card" id="speakCard" onclick="speakNow()">' +
+      '<span class="char">' + q.char + '</span>' +
+      '<span class="hint-text">點我聽發音 🔊</span>' +
+    '</button>' +
+    '<div class="feedback-bar" id="feedbackBar"></div>';
+
+  var disp = document.getElementById('inputDisplay');
+  disp.className = 'input-display';
+  document.getElementById('inputText').textContent = '';
+
+  setTimeout(function(){ speakQuestion(q.char); }, 350);
+}
+
+function speakNow() {
+  var q = state.questions[state.current];
+  var card = document.getElementById('speakCard');
+  card.classList.add('speaking');
+  speakQuestion(q.char);
+  setTimeout(function(){ card.classList.remove('speaking'); }, 1400);
+}
+
+function typeKey(key) {
+  if (state.answered) { return; }
+  sfxClick();
+  state.typed += key;
+  document.getElementById('inputText').textContent = state.typed;
+  speak(key, 0.9);
+}
+
+function deleteKey() {
+  if (state.answered) { return; }
+  sfxClick();
+  state.typed = state.typed.slice(0, state.typed.length - 1);
+  document.getElementById('inputText').textContent = state.typed;
+}
+
+function submitAnswer() {
+  if (state.answered || !state.typed) { return; }
+  var q = state.questions[state.current];
+  state.answered = true;
+  var disp = document.getElementById('inputDisplay');
+  var fb = document.getElementById('feedbackBar');
+
+  if (state.typed === q.bopo) {
+    disp.classList.add('correct');
+    sfxCorrect();
+    state.score++;
+    fb.style.color = '#1E8449';
+    fb.textContent = '✅ 答對了！';
+    setTimeout(function(){ speakCorrectResult(q.char, q.bopo); }, 400);
+  } else {
+    disp.classList.add('wrong');
+    sfxWrong();
+    fb.style.color = '#E74C3C';
+    fb.textContent = '❌ 正確答案：' + q.bopo;
+    document.getElementById('inputText').textContent = q.bopo;
+    setTimeout(function(){ speakWrongResult(q.char, q.bopo); }, 400);
+  }
+  updateProgress();
+  setTimeout(function() {
+    var spoken = false;
+    function goNext() {
+      if (spoken) { return; }
+      spoken = true;
+      setTimeout(nextQuestion, 600);
+    }
+    if (window.speechSynthesis) {
+      var check = setInterval(function() {
+        if (!window.speechSynthesis.speaking) {
+          clearInterval(check);
+          goNext();
+        }
+      }, 200);
+      // fallback: max 6 seconds
+      setTimeout(function() { clearInterval(check); goNext(); }, 6000);
+    } else {
+      setTimeout(nextQuestion, 1500);
+    }
+  }, 400);
+}
+
+function nextQuestion() {
+  state.current++;
+  if (state.current >= state.total) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function updateProgress() {
+  var pct = (state.current / state.total) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = state.current + ' / ' + state.total;
+  document.getElementById('scoreDisplay').textContent = state.score;
+}
+
+function buildKeyboard() {
+  var rows = document.getElementById('bopoRows');
+  rows.innerHTML = '';
+  for (var r = 0; r < BOPO_LAYOUT.length; r++) {
+    var rowEl = document.createElement('div');
+    rowEl.className = 'bopo-row';
+    for (var k = 0; k < BOPO_LAYOUT[r].length; k++) {
+      (function(key) {
+        var btn = document.createElement('button');
+        var isTone = TONES.indexOf(key) >= 0;
+        btn.className = 'bopo-key' + (isTone ? ' tone-key' : '');
+        btn.textContent = key;
+        btn.ontouchstart = function(e) { e.preventDefault(); typeKey(key); };
+        btn.onclick = function() { typeKey(key); };
+        rowEl.appendChild(btn);
+      })(BOPO_LAYOUT[r][k]);
+    }
+    rows.appendChild(rowEl);
+  }
+  // action row
+  var ar = document.createElement('div');
+  ar.className = 'bopo-row';
+  ar.style.marginTop = '4px';
+
+  var del = document.createElement('button');
+  del.className = 'bopo-key delete-key';
+  del.innerHTML = '⌫';
+  del.ontouchstart = function(e) { e.preventDefault(); deleteKey(); };
+  del.onclick = deleteKey;
+
+  var sub = document.createElement('button');
+  sub.className = 'bopo-key submit-key';
+  sub.innerHTML = '✓';
+  sub.ontouchstart = function(e) { e.preventDefault(); submitAnswer(); };
+  sub.onclick = submitAnswer;
+
+  ar.appendChild(del);
+  ar.appendChild(sub);
+  rows.appendChild(ar);
+}
+
+// =====================================================================
+// RESULT
+// =====================================================================
+function showResult() {
+  var pct = state.score / state.total;
+  var emoji, title, stars;
+  if (pct >= 0.9)      { emoji='🏆'; title='超厲害！';    stars='⭐⭐⭐'; sfxCelebrate(); spawnConfetti(); }
+  else if (pct >= 0.7) { emoji='🎉'; title='做得很好！';  stars='⭐⭐';   sfxCorrect(); }
+  else if (pct >= 0.5) { emoji='💪'; title='繼續加油！';  stars='⭐';    sfxCorrect(); }
+  else                 { emoji='😊'; title='再練習一次！'; stars='';      sfxCorrect(); }
+
+  document.getElementById('resultEmoji').textContent  = emoji;
+  document.getElementById('resultTitle').textContent  = title;
+  document.getElementById('resultScore').textContent  = '答對 ' + state.score + ' / ' + state.total + ' 題';
+  document.getElementById('resultStars').textContent  = stars;
+  document.getElementById('resultOverlay').classList.add('show');
+  speak(title + ' 你答對了 ' + state.score + ' 題！', 0.85);
+
+  document.getElementById('resultAgainBtn').onclick = function() {
+    sfxClick();
+    document.getElementById('resultOverlay').classList.remove('show');
+    state.questions = shuffle(getSelectedWords());
+    state.total = state.questions.length;
+    state.current = 0; state.score = 0; state.typed = ''; state.answered = false;
+    renderQuestion();
+    updateProgress();
+  };
+}
+
+function goHome() {
+  sfxClick();
+  if (window.speechSynthesis) { window.speechSynthesis.cancel(); }
+  document.getElementById('resultOverlay').classList.remove('show');
+  document.getElementById('game').classList.remove('active');
+  document.getElementById('home').classList.add('active');
+}
+
+function spawnConfetti() {
+  var c = document.getElementById('confettiContainer');
+  c.innerHTML = '';
+  var cols = ['#FF6B9D','#9B59B6','#5DADE2','#F7DC6F','#58D68D','#F0A500'];
+  for (var i = 0; i < 70; i++) {
+    (function() {
+      var p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.left = (Math.random()*100) + 'vw';
+      p.style.background = cols[Math.floor(Math.random()*cols.length)];
+      var dur = (1.5 + Math.random()*2).toFixed(2) + 's';
+      p.style.cssText += ';--dur:' + dur;
+      p.style.animationDelay = (Math.random()*0.6).toFixed(2) + 's';
+      var sz = (6 + Math.random()*8).toFixed(0) + 'px';
+      p.style.width = sz; p.style.height = sz;
+      c.appendChild(p);
+    })();
+  }
+  setTimeout(function(){ c.innerHTML=''; }, 4500);
+}
+
+// =====================================================================
+// CUSTOM WORDS
+// =====================================================================
+var customWords = [];
+
+function switchTab(tab) {
+  sfxClick();
+  var course = document.getElementById('panelCourse');
+  var custom = document.getElementById('panelCustom');
+  var playBtn = document.getElementById('playCustomBtn');
+  var tCourse = document.getElementById('tabCourse');
+  var tCustom = document.getElementById('tabCustom');
+  if (tab === 'course') {
+    course.style.display = '';
+    custom.style.display = 'none';
+    playBtn.style.display = 'none';
+    tCourse.classList.add('active');
+    tCustom.classList.remove('active');
+  } else {
+    course.style.display = 'none';
+    custom.style.display = 'flex';
+    playBtn.style.display = customWords.length > 0 ? 'block' : 'none';
+    tCustom.classList.add('active');
+    tCourse.classList.remove('active');
+    renderCustomList();
+  }
+}
+
+function addCustomWord() {
+  var charEl = document.getElementById('inputChar');
+  var bopoEl = document.getElementById('inputBopo');
+  var ch = charEl.value.trim();
+  var bp = bopoEl.value.trim();
+  if (!ch || !bp) { speak('請輸入文字和注音！'); return; }
+  sfxCorrect();
+  customWords.push({ char: ch, bopo: bp });
+  charEl.value = '';
+  bopoEl.value = '';
+  renderCustomList();
+  document.getElementById('playCustomBtn').style.display = 'block';
+  speak(ch);
+}
+
+function renderCustomList() {
+  var list = document.getElementById('customList');
+  if (customWords.length === 0) {
+    list.innerHTML = '<div class="custom-empty">還沒有自訂單字<br>在上面新增吧！</div>';
+    return;
+  }
+  list.innerHTML = '';
+  for (var i = 0; i < customWords.length; i++) {
+    (function(idx) {
+      var item = document.createElement('div');
+      item.className = 'custom-item';
+      var charSpan = document.createElement('span');
+      charSpan.className = 'item-char';
+      charSpan.textContent = customWords[idx].char;
+      var bopoSpan = document.createElement('span');
+      bopoSpan.className = 'item-bopo';
+      bopoSpan.textContent = customWords[idx].bopo;
+      var delBtn = document.createElement('button');
+      delBtn.className = 'del-btn';
+      delBtn.innerHTML = '✕';
+      delBtn.onclick = function() {
+        sfxClick();
+        customWords.splice(idx, 1);
+        renderCustomList();
+        if (customWords.length === 0) {
+          document.getElementById('playCustomBtn').style.display = 'none';
+        }
+      };
+      // tap char to hear it
+      charSpan.onclick = function() { speak(customWords[idx].char); };
+      item.appendChild(charSpan);
+      item.appendChild(bopoSpan);
+      item.appendChild(delBtn);
+      list.appendChild(item);
+    })(i);
+  }
+}
+
+function startCustomGame() {
+  if (customWords.length === 0) { speak('請先新增自訂單字！'); return; }
+  sfxClick();
+  state.questions = shuffle(customWords.slice());
+  state.total = state.questions.length;
+  state.current = 0; state.score = 0; state.typed = ''; state.answered = false;
+  document.getElementById('home').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  buildKeyboard();
+  renderQuestion();
+  updateProgress();
+  setTimeout(function(){ speak('開始囉！請輸入這個字的注音！', 0.85); }, 400);
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+document.getElementById('backBtn').addEventListener('click', function() {
+  sfxClick();
+  if (window.speechSynthesis) { window.speechSynthesis.cancel(); }
+  document.getElementById('game').classList.remove('active');
+  document.getElementById('home').classList.add('active');
+});
+
+window.onload = function() {
+  buildHome();
+  setTimeout(function(){ speak('歡迎！請選擇要練習的課次，然後按開始遊戲！'); }, 800);
+};
+
+</script>
+
+</body>
+</html>
