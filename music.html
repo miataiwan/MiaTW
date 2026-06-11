@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0a1a">
+<title>歌詞單字學習 — Proud of You</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #0d0a1a; --card: #13102a; --card2: #1e1a38;
+  --rose: #f472b6; --gold: #ffd166; --sky: #93c5fd;
+  --purple: #c084fc; --green: #34d399;
+  --text: #f0eaff; --muted: #7b6fa0;
+  --radius: 16px;
+}
+html, body {
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100dvh; overflow-x: hidden; user-select: none;
+}
+/* subtle gradient bg */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(196,132,252,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 30% at 80% 80%, rgba(244,114,182,0.07) 0%, transparent 70%);
+}
+
+/* HEADER */
+.header {
+position: sticky; top: 0; z-index: 100;
+background: rgba(13,10,26,0.94); backdrop-filter: blur(20px);
+padding: 14px 20px 12px; display: flex; align-items: center; gap: 12px;
+border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.album-art {
+width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0;
+background: linear-gradient(135deg, #2a1060, #5b1a6e);
+display: flex; align-items: center; justify-content: center; font-size: 24px;
+box-shadow: 0 0 0 2px rgba(196,132,252,0.4), 0 4px 16px rgba(196,132,252,0.2);
+animation: float 5s ease-in-out infinite;
+}
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+.song-info { flex: 1; min-width: 0; }
+.song-title { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.song-artist { font-size: 12px; color: var(–muted); margin-top: 2px; }
+.sing-btn {
+background: linear-gradient(135deg, var(–purple), #9333ea);
+border: none; border-radius: 22px; padding: 9px 16px; color: #fff;
+font-weight: 800; font-size: 13px; cursor: pointer; flex-shrink: 0;
+display: flex; align-items: center; gap: 5px;
+box-shadow: 0 4px 15px rgba(196,132,252,0.35); transition: transform .15s;
+}
+.sing-btn:active { transform: scale(0.95); }
+.sing-btn.playing { background: linear-gradient(135deg, var(–rose), #be185d); }
+
+/* YouTube */
+.yt-bar {
+background: rgba(13,10,26,0.96); border-bottom: 1px solid rgba(255,255,255,0.06);
+padding: 10px 16px; position: sticky; top: 73px; z-index: 99;
+}
+.yt-label { font-size: 11px; color: var(–muted); margin-bottom: 6px; letter-spacing: 0.5px; }
+.yt-embed { width: 100%; height: 56px; border-radius: 10px; overflow: hidden; border: none; display: block; }
+
+/* progress */
+.progress-bar { height: 2px; background: rgba(255,255,255,0.07); }
+.progress-fill {
+height: 100%; width: 0%;
+background: linear-gradient(90deg, var(–purple), var(–rose));
+box-shadow: 0 0 8px var(–purple); transition: width 0.4s linear;
+}
+
+/* LYRICS */
+.lyrics-container {
+padding: 12px 16px 130px; display: flex; flex-direction: column; gap: 10px;
+position: relative; z-index: 1;
+}
+.line-block {
+background: var(–card); border-radius: var(–radius); padding: 14px 16px;
+border: 1px solid rgba(255,255,255,0.05); cursor: pointer;
+transition: background .3s, border-color .3s, transform .2s; position: relative;
+}
+.line-block::before {
+content: ‘’; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+background: linear-gradient(180deg, var(–purple), var(–rose));
+opacity: 0; transition: opacity .3s; border-radius: 3px 0 0 3px;
+}
+.line-block.active {
+background: rgba(196,132,252,0.09);
+border-color: rgba(196,132,252,0.25); transform: scale(1.01);
+}
+.line-block.active::before { opacity: 1; }
+
+.section-label {
+font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+color: var(–rose); text-transform: uppercase; margin-bottom: 6px; opacity: 0.8;
+}
+.english-line { display: flex; flex-wrap: wrap; gap: 5px 4px; margin-bottom: 8px; }
+.word {
+background: var(–card2); border: 1px solid rgba(255,255,255,0.08);
+border-radius: 8px; padding: 5px 10px; font-size: 16px; font-weight: 600;
+color: var(–text); cursor: pointer; transition: background .15s, transform .1s;
+}
+.word:active { transform: scale(0.88); }
+.word.speaking {
+background: rgba(196,132,252,0.22); border-color: var(–purple); color: var(–purple);
+animation: pw .4s ease;
+}
+.word.lit {
+background: rgba(244,114,182,0.15); border-color: rgba(244,114,182,0.45); color: var(–rose);
+}
+@keyframes pw { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+.chinese-line { font-size: 13px; color: var(–gold); font-weight: 500; line-height: 1.7; padding-left: 2px; }
+
+/* TOOLTIP */
+.tooltip {
+position: fixed; z-index: 200; background: #1a1030;
+border: 1px solid rgba(196,132,252,0.4); border-radius: 14px; padding: 14px 16px;
+pointer-events: none; opacity: 0; transform: translateY(8px) scale(0.94);
+transition: opacity .2s, transform .2s; max-width: 230px;
+box-shadow: 0 12px 40px rgba(0,0,0,0.65);
+}
+.tooltip.show { opacity: 1; transform: translateY(0) scale(1); }
+.tt-word { font-size: 19px; font-weight: 800; color: var(–purple); }
+.tt-phonetic { font-size: 12px; color: var(–muted); margin-top: 2px; }
+.tt-meaning { font-size: 15px; color: var(–gold); margin-top: 7px; font-weight: 700; }
+.tt-example { font-size: 12px; color: var(–muted); margin-top: 5px; font-style: italic; line-height: 1.5; }
+
+/* PLAYER */
+.player-bar {
+position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+background: rgba(13,10,26,0.97); backdrop-filter: blur(24px);
+border-top: 1px solid rgba(255,255,255,0.08);
+padding: 12px 20px; padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+.player-controls { display: flex; align-items: center; justify-content: center; gap: 24px; }
+.ctrl-btn {
+background: none; border: none; color: var(–muted); font-size: 22px;
+cursor: pointer; padding: 8px; transition: color .15s, transform .15s;
+}
+.ctrl-btn:active { transform: scale(0.85); color: var(–text); }
+.play-main {
+width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0;
+background: linear-gradient(135deg, var(–purple), #9333ea);
+border: none; color: #fff; font-size: 22px;
+display: flex; align-items: center; justify-content: center; cursor: pointer;
+box-shadow: 0 4px 20px rgba(196,132,252,0.45); transition: transform .15s;
+}
+.play-main:active { transform: scale(0.92); }
+.play-main.playing { background: linear-gradient(135deg, var(–green), #059669); box-shadow: 0 4px 20px rgba(52,211,153,0.4); }
+.speed-badge {
+background: var(–card2); border: 1px solid rgba(255,255,255,0.12);
+border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700;
+cursor: pointer; min-width: 38px; text-align: center;
+}
+.speed-badge.slow { color: var(–gold); border-color: rgba(255,209,102,0.3); }
+
+/* HINT */
+.hint {
+position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+background: rgba(196,132,252,0.13); border: 1px solid rgba(196,132,252,0.3);
+border-radius: 20px; padding: 8px 18px; font-size: 13px; color: var(–purple);
+opacity: 0; transition: opacity .4s; pointer-events: none; white-space: nowrap; z-index: 300;
+}
+.hint.show { opacity: 1; }
+</style>
+
+</head>
+<body>
+
+<div class="header">
+  <div class="album-art">🦋</div>
+  <div class="song-info">
+    <div class="song-title">Proud of You</div>
+    <div class="song-artist">Fiona Fung · 揮著翅膀的女孩</div>
+  </div>
+  <button class="sing-btn" id="singBtn" onclick="toggleSing()">
+    <span>🎤</span><span id="singLabel">唱整首</span>
+  </button>
+</div>
+
+<div class="yt-bar">
+  <div class="yt-label">🎵 原曲播放（可同步跟唱）</div>
+  <iframe class="yt-embed"
+    src="https://www.youtube.com/embed/UtmObzrbZxw?controls=1&rel=0"
+    allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="lyrics-container" id="lyricsContainer"></div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tt-word" id="ttWord"></div>
+  <div class="tt-phonetic" id="ttPhonetic"></div>
+  <div class="tt-meaning" id="ttMeaning"></div>
+  <div class="tt-example" id="ttExample"></div>
+</div>
+
+<div class="player-bar">
+  <div class="player-controls">
+    <button class="ctrl-btn" onclick="prevLine()">⏮</button>
+    <button class="ctrl-btn" onclick="replayLine()">🔁</button>
+    <button class="play-main" id="playMain" onclick="togglePlay()">▶</button>
+    <button class="ctrl-btn" onclick="nextLine()">⏭</button>
+    <div class="speed-badge" id="speedBadge" onclick="toggleSpeed()">1×</div>
+  </div>
+</div>
+<div class="hint" id="hint">🦋 點擊單字可聽發音與中文！</div>
+
+<script>
+var lyrics = [
+  { section:"Verse 1",
+    en:["Love","in","your","eyes"],
+    zh:"愛在你的眼中", dur:2800 },
+  { en:["Sitting","silent","by","my","side"],
+    zh:"靜靜地坐在我身邊", dur:3200 },
+  { en:["Going","on","holding","hands"],
+    zh:"持續緊握著手", dur:2800 },
+  { en:["Walking","through","the","nights"],
+    zh:"漫步整個夜晚", dur:2800 },
+  { en:["Hold","me","up","hold","me","tight"],
+    zh:"抱起我，抱緊我", dur:3000 },
+  { en:["Lift","me","up","to","touch","the","sky"],
+    zh:"高高舉起讓我觸碰天空", dur:3200 },
+  { en:["Teaching","me","to","love","with","heart"],
+    zh:"教我如何用心去愛", dur:3200 },
+  { en:["Helping","me","open","my","mind"],
+    zh:"幫我打開心門", dur:3000 },
+
+  { section:"Chorus",
+    en:["I","can","fly"],
+    zh:"我能飛翔", dur:2200 },
+  { en:["I'm","proud","that","I","can","fly"],
+    zh:"我為自己能飛而驕傲", dur:3000 },
+  { en:["To","give","the","best","of","mine"],
+    zh:"奉獻自己最珍貴的", dur:3000 },
+  { en:["Till","the","end","of","the","time"],
+    zh:"直到時間的盡頭", dur:3000 },
+  { en:["Believe","me","I","can","fly"],
+    zh:"相信我，我能飛翔", dur:2800 },
+  { en:["I'm","proud","that","I","can","fly"],
+    zh:"我為自己能飛而驕傲", dur:3000 },
+  { en:["To","give","the","best","of","mine"],
+    zh:"奉獻自己最珍貴的", dur:2800 },
+  { en:["The","heaven","in","the","sky"],
+    zh:"天堂就在天空中", dur:2800 },
+
+  { section:"Verse 2",
+    en:["Stars","in","the","sky"],
+    zh:"天空中的星星", dur:2500 },
+  { en:["Wishing","once","upon","a","time"],
+    zh:"許一個久遠以前的願望", dur:3000 },
+  { en:["Give","me","love","make","me","smile"],
+    zh:"給我愛讓我微笑", dur:3000 },
+  { en:["Till","the","end","of","life"],
+    zh:"直到生命的最後一刻", dur:2800 },
+  { en:["Hold","me","up","hold","me","tight"],
+    zh:"抱起我，抱緊我", dur:3000 },
+  { en:["Lift","me","up","to","touch","the","sky"],
+    zh:"高高舉起讓我觸碰天空", dur:3200 },
+  { en:["Teaching","me","to","love","with","heart"],
+    zh:"教我如何用心去愛", dur:3200 },
+  { en:["Helping","me","open","my","mind"],
+    zh:"幫我打開心門", dur:3000 },
+
+  { section:"Chorus",
+    en:["I","can","fly"],
+    zh:"我能飛翔", dur:2200 },
+  { en:["I'm","proud","that","I","can","fly"],
+    zh:"我為自己能飛而驕傲", dur:3000 },
+  { en:["To","give","the","best","of","mine"],
+    zh:"奉獻自己最珍貴的", dur:2800 },
+  { en:["Till","the","end","of","the","time"],
+    zh:"直到時間的盡頭", dur:3000 },
+  { en:["Believe","me","I","can","fly"],
+    zh:"相信我，我能飛翔", dur:2800 },
+  { en:["I'm","proud","that","I","can","fly"],
+    zh:"我為自己能飛而驕傲", dur:3000 },
+  { en:["To","give","the","best","of","mine"],
+    zh:"奉獻自己最珍貴的", dur:2800 },
+  { en:["The","heaven","in","the","sky"],
+    zh:"天堂就在天空中", dur:2800 },
+
+  { section:"Bridge",
+    en:["Can't","you","believe","that","you","light","up","my","way"],
+    zh:"難道你不相信你照亮了我的路", dur:4000 },
+  { en:["No","matter","how","that","ease","my","path"],
+    zh:"不管怎樣都讓我的路更輕鬆", dur:3500 },
+
+  { section:"Final Chorus",
+    en:["I","can","fly"],
+    zh:"我能飛翔", dur:2200 },
+  { en:["I'm","proud","that","I","can","fly"],
+    zh:"我為自己能飛而驕傲", dur:3000 },
+  { en:["To","give","the","best","of","mine"],
+    zh:"奉獻自己最珍貴的", dur:2800 },
+  { en:["Till","the","end","of","the","time"],
+    zh:"直到時間的盡頭", dur:3000 },
+  { en:["Believe","me","I","can","fly"],
+    zh:"相信我，我能飛翔", dur:2800 },
+  { en:["I'm","proud","that","I","can","fly"],
+    zh:"我為自己能飛而驕傲", dur:3000 },
+  { en:["To","give","the","best","of","mine"],
+    zh:"奉獻自己最珍貴的", dur:2800 },
+  { en:["The","heaven","in","the","sky"],
+    zh:"天堂就在天空中", dur:2800 }
+];
+
+var dict = {
+  "love":     { ph:"/lʌv/",         zh:"愛；愛意",          ex:"Love is in your eyes." },
+  "eyes":     { ph:"/aɪz/",         zh:"眼睛（複數）",      ex:"Her eyes are beautiful." },
+  "sitting":  { ph:"/ˈsɪtɪŋ/",     zh:"坐著",              ex:"She's sitting by my side." },
+  "silent":   { ph:"/ˈsaɪlənt/",   zh:"沉默的；安靜的",    ex:"Stay silent and listen." },
+  "side":     { ph:"/saɪd/",        zh:"旁邊；身邊",        ex:"Stand by my side." },
+  "going":    { ph:"/ˈɡoʊɪŋ/",     zh:"持續；前進",        ex:"Keep going forward." },
+  "holding":  { ph:"/ˈhoʊldɪŋ/",   zh:"握著；抱著",        ex:"Holding hands together." },
+  "hands":    { ph:"/hændz/",       zh:"手（複數）",        ex:"Hold my hands." },
+  "walking":  { ph:"/ˈwɔːkɪŋ/",    zh:"走著；漫步",        ex:"Walking through the night." },
+  "through":  { ph:"/θruː/",        zh:"穿過；經歷",        ex:"Walk through the storm." },
+  "nights":   { ph:"/naɪts/",       zh:"夜晚（複數）",      ex:"Many cold nights." },
+  "hold":     { ph:"/hoʊld/",       zh:"抱；握住",          ex:"Hold me tight." },
+  "tight":    { ph:"/taɪt/",        zh:"緊緊地；緊的",      ex:"Hold me tight." },
+  "lift":     { ph:"/lɪft/",        zh:"舉起；提升",        ex:"Lift me up high." },
+  "touch":    { ph:"/tʌtʃ/",        zh:"觸碰；感動",        ex:"Touch the sky." },
+  "sky":      { ph:"/skaɪ/",        zh:"天空",              ex:"The sky is endless." },
+  "teaching": { ph:"/ˈtiːtʃɪŋ/",   zh:"教導；教",          ex:"Teaching me to fly." },
+  "love":     { ph:"/lʌv/",         zh:"愛",                ex:"Love with all your heart." },
+  "heart":    { ph:"/hɑːrt/",       zh:"心；心臟；真心",    ex:"Love with your heart." },
+  "helping":  { ph:"/ˈhɛlpɪŋ/",    zh:"幫助；協助",        ex:"Helping me grow." },
+  "open":     { ph:"/ˈoʊpən/",      zh:"打開；開闊",        ex:"Open your mind." },
+  "mind":     { ph:"/maɪnd/",       zh:"心智；思想；心門",  ex:"Open your mind to learn." },
+  "fly":      { ph:"/flaɪ/",        zh:"飛；飛翔",          ex:"I can fly." },
+  "proud":    { ph:"/praʊd/",       zh:"驕傲的；自豪的",    ex:"I'm proud of you." },
+  "give":     { ph:"/ɡɪv/",         zh:"給予；付出",        ex:"Give the best of yourself." },
+  "best":     { ph:"/bɛst/",        zh:"最好的；最棒的",    ex:"Give your best." },
+  "mine":     { ph:"/maɪn/",        zh:"我的（所有格）",    ex:"The best of mine." },
+  "till":     { ph:"/tɪl/",         zh:"直到；一直到",      ex:"Till the end of time." },
+  "end":      { ph:"/ɛnd/",         zh:"結束；盡頭",        ex:"Till the end." },
+  "time":     { ph:"/taɪm/",        zh:"時間；時光",        ex:"The end of time." },
+  "believe":  { ph:"/bɪˈliːv/",    zh:"相信；信任",        ex:"Believe me, I can fly." },
+  "heaven":   { ph:"/ˈhɛvən/",      zh:"天堂；天空",        ex:"Heaven is in the sky." },
+  "stars":    { ph:"/stɑːrz/",      zh:"星星（複數）",      ex:"Stars shine at night." },
+  "wishing":  { ph:"/ˈwɪʃɪŋ/",     zh:"許願；希望",        ex:"Wishing upon a star." },
+  "once":     { ph:"/wʌns/",        zh:"曾經；一次",        ex:"Once upon a time." },
+  "upon":     { ph:"/əˈpɒn/",       zh:"在…上；一旦",      ex:"Once upon a time." },
+  "smile":    { ph:"/smaɪl/",       zh:"微笑",              ex:"Make me smile." },
+  "life":     { ph:"/laɪf/",        zh:"生命；生活",        ex:"Till the end of life." },
+  "light":    { ph:"/laɪt/",        zh:"照亮；光",          ex:"You light up my way." },
+  "way":      { ph:"/weɪ/",         zh:"道路；方式",        ex:"Light up my way." },
+  "matter":   { ph:"/ˈmætər/",      zh:"無論；重要",        ex:"No matter what happens." },
+  "ease":     { ph:"/iːz/",         zh:"使輕鬆；緩解",      ex:"Ease my path." },
+  "path":     { ph:"/pæθ/",         zh:"路徑；人生路",      ex:"Light up my path." },
+  "can't":    { ph:"/kænt/",        zh:"難道不；不能",      ex:"Can't you see?" },
+  "can":      { ph:"/kæn/",         zh:"能；可以",          ex:"I can do it." },
+  "my":       { ph:"/maɪ/",         zh:"我的",              ex:"My heart is yours." },
+  "me":       { ph:"/miː/",         zh:"我（受格）",        ex:"Hold me." },
+  "your":     { ph:"/jʊər/",        zh:"你的",              ex:"Your love lifts me." },
+  "you":      { ph:"/juː/",         zh:"你",                ex:"I believe in you." },
+  "the":      { ph:"/ðə/",          zh:"（定冠詞）",        ex:"The sky above." },
+  "in":       { ph:"/ɪn/",          zh:"在…裡；在",        ex:"Stars in the sky." },
+  "to":       { ph:"/tuː/",         zh:"到；讓（不定詞）",  ex:"Lift me up to touch." },
+  "a":        { ph:"/ə/",           zh:"一個（不定冠詞）",  ex:"Once upon a time." },
+  "by":       { ph:"/baɪ/",         zh:"在…旁邊",          ex:"Sitting by my side." },
+  "of":       { ph:"/əv/",          zh:"的；屬於",          ex:"The best of mine." },
+  "no":       { ph:"/noʊ/",         zh:"不；沒有",          ex:"No matter how." },
+  "how":      { ph:"/haʊ/",         zh:"如何；多麼",        ex:"No matter how hard." },
+  "that":     { ph:"/ðæt/",         zh:"那；那個",          ex:"Believe that you can." },
+  "up":       { ph:"/ʌp/",          zh:"向上；起來",        ex:"Lift me up." },
+  "with":     { ph:"/wɪð/",         zh:"用；帶著",          ex:"Love with heart." }
+};
+
+var currentLine = -1;
+var isPlaying = false;
+var isSinging = false;
+var speed = 1;
+var wordTimers = [];
+var uttRef = null;
+
+function init() {
+  var container = document.getElementById('lyricsContainer');
+  for (var li = 0; li < lyrics.length; li++) {
+    (function(idx) {
+      var line = lyrics[idx];
+      var block = document.createElement('div');
+      block.className = 'line-block';
+      block.id = 'line-' + idx;
+
+      if (line.section) {
+        var sec = document.createElement('div');
+        sec.className = 'section-label';
+        sec.textContent = line.section;
+        block.appendChild(sec);
+      }
+
+      var eng = document.createElement('div');
+      eng.className = 'english-line';
+
+      for (var wi = 0; wi < line.en.length; wi++) {
+        (function(wordIdx, word) {
+          var span = document.createElement('span');
+          span.className = 'word';
+          span.textContent = word;
+          span.id = 'w-' + idx + '-' + wordIdx;
+          span.onclick = function(e) {
+            e.stopPropagation();
+            speakWord(word, span);
+          };
+          eng.appendChild(span);
+        })(wi, line.en[wi]);
+      }
+
+      var zh = document.createElement('div');
+      zh.className = 'chinese-line';
+      zh.textContent = line.zh;
+
+      block.appendChild(eng);
+      block.appendChild(zh);
+      block.onclick = (function(i){ return function(){ jumpToLine(i); }; })(idx);
+      container.appendChild(block);
+    })(li);
+  }
+
+  setTimeout(function() {
+    var h = document.getElementById('hint');
+    h.classList.add('show');
+    setTimeout(function(){ h.classList.remove('show'); }, 3500);
+  }, 1000);
+}
+
+/* ── SPEECH: 同步修正
+   使用 onend 回調驅動播放，不再用 setTimeout 估時間 */
+function speak(text, rate, onEnd) {
+  if (!window.speechSynthesis) { if (onEnd) setTimeout(onEnd, 800); return; }
+  speechSynthesis.cancel();
+
+  // iOS Safari 需稍等才能 cancel 乾淨
+  setTimeout(function() {
+    var utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'en-US';
+    utt.rate = (rate || 1) * speed;
+    utt.pitch = 1.05;
+    if (onEnd) {
+      utt.onend = onEnd;
+      // 保險：若 onend 沒觸發（部分瀏覽器 bug），用估計時間補觸發
+      var wordCount = text.split(' ').length;
+      var estimatedMs = (wordCount / utt.rate) * 700 + 600;
+      var safeTimer = setTimeout(function() {
+        if (onEnd) { var cb = onEnd; onEnd = null; utt.onend = null; cb(); }
+      }, estimatedMs);
+      utt.onend = function() {
+        clearTimeout(safeTimer);
+        if (onEnd) { var cb = onEnd; onEnd = null; cb(); }
+      };
+    }
+    uttRef = utt;
+    speechSynthesis.speak(utt);
+  }, 50);
+}
+
+function speakWord(word, el) {
+  var all = document.querySelectorAll('.word.speaking');
+  for (var i = 0; i < all.length; i++) all[i].classList.remove('speaking');
+  el.classList.add('speaking');
+  var timeout = setTimeout(function(){ el.classList.remove('speaking'); }, 900);
+
+  // speak word only, no completion callback needed
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  setTimeout(function() {
+    var utt = new SpeechSynthesisUtterance(word);
+    utt.lang = 'en-US'; utt.rate = 0.82 * speed; utt.pitch = 1.05;
+    speechSynthesis.speak(utt);
+  }, 50);
+
+  var key = word.toLowerCase().replace(/[',]/g,'');
+  var info = dict[word.toLowerCase()] || dict[key];
+  showTooltip(el, word, info);
+}
+
+function showTooltip(el, word, info) {
+  var tt = document.getElementById('tooltip');
+  document.getElementById('ttWord').textContent = word;
+  document.getElementById('ttPhonetic').textContent = info ? info.ph : '';
+  document.getElementById('ttMeaning').textContent = info ? info.zh : '（查看字典）';
+  document.getElementById('ttExample').textContent = info ? info.ex : '';
+  var rect = el.getBoundingClientRect();
+  var top = rect.bottom + 8;
+  var left = rect.left;
+  if (left + 235 > window.innerWidth - 8) left = window.innerWidth - 243;
+  if (top + 140 > window.innerHeight) top = rect.top - 145;
+  tt.style.left = Math.max(8, left) + 'px';
+  tt.style.top = top + 'px';
+  tt.classList.add('show');
+  clearTimeout(tt._t);
+  tt._t = setTimeout(function(){ tt.classList.remove('show'); }, 3200);
+}
+
+function clearLit() {
+  var lit = document.querySelectorAll('.word.lit');
+  for (var i = 0; i < lit.length; i++) lit[i].classList.remove('lit');
+}
+
+/* 卡拉OK亮字：根據語音實際時長用 onboundary 或分段估算 */
+function animateKaraoke(li, totalMs) {
+  for (var i = 0; i < wordTimers.length; i++) clearTimeout(wordTimers[i]);
+  wordTimers = [];
+  clearLit();
+  var words = lyrics[li].en;
+  var pw = totalMs / words.length;
+  for (var wi = 0; wi < words.length; wi++) {
+    (function(wordIdx, lineIdx) {
+      wordTimers.push(setTimeout(function() {
+        var el = document.getElementById('w-' + lineIdx + '-' + wordIdx);
+        if (el) el.classList.add('lit');
+      }, wordIdx * pw));
+    })(wi, li);
+  }
+}
+
+function setActiveLine(idx) {
+  var active = document.querySelectorAll('.line-block.active');
+  for (var i = 0; i < active.length; i++) active[i].classList.remove('active');
+  clearLit();
+  currentLine = idx;
+  if (idx < 0) return;
+  var block = document.getElementById('line-' + idx);
+  if (block) {
+    block.classList.add('active');
+    block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  document.getElementById('progressFill').style.width =
+    ((idx + 1) / lyrics.length * 100) + '%';
+}
+
+function playLine(idx, onDone) {
+  var line = lyrics[idx];
+  var text = line.en.join(' ');
+  var wordCount = line.en.length;
+
+  // 先估算時長給卡拉OK亮字用（0.9 rate，每字約 280ms + 400ms 緩衝）
+  var estimatedMs = (wordCount / (0.9 * speed)) * 280 + 400;
+  animateKaraoke(idx, estimatedMs);
+
+  speak(text, 0.9, function() {
+    if (onDone) onDone();
+  });
+}
+
+function togglePlay() {
+  if (isPlaying) { pausePlayback(); } else { startPlayback(); }
+}
+
+function startPlayback() {
+  isPlaying = true;
+  document.getElementById('playMain').classList.add('playing');
+  document.getElementById('playMain').textContent = '⏸';
+  if (currentLine < 0 || currentLine >= lyrics.length - 1) currentLine = -1;
+  playNext();
+}
+
+function pausePlayback() {
+  isPlaying = false;
+  isSinging = false;
+  document.getElementById('playMain').classList.remove('playing');
+  document.getElementById('playMain').textContent = '▶';
+  document.getElementById('singBtn').classList.remove('playing');
+  document.getElementById('singLabel').textContent = '唱整首';
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  for (var i = 0; i < wordTimers.length; i++) clearTimeout(wordTimers[i]);
+}
+
+function playNext() {
+  if (!isPlaying) return;
+  var next = currentLine + 1;
+  if (next >= lyrics.length) {
+    pausePlayback();
+    document.getElementById('progressFill').style.width = '100%';
+    return;
+  }
+  setActiveLine(next);
+  playLine(next, function() {
+    if (!isPlaying) return;
+    // 句間短停頓 400ms
+    setTimeout(playNext, 400);
+  });
+}
+
+function jumpToLine(idx) {
+  pausePlayback();
+  setActiveLine(idx);
+}
+function prevLine() { jumpToLine(Math.max(0, currentLine <= 0 ? 0 : currentLine - 1)); }
+function nextLine() {
+  var t = currentLine < 0 ? 0 : Math.min(lyrics.length - 1, currentLine + 1);
+  jumpToLine(t);
+}
+function replayLine() {
+  if (currentLine < 0) { jumpToLine(0); return; }
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  for (var i = 0; i < wordTimers.length; i++) clearTimeout(wordTimers[i]);
+  clearLit();
+  playLine(currentLine, null);
+}
+
+function toggleSing() {
+  if (isSinging) {
+    isSinging = false;
+    pausePlayback();
+  } else {
+    isSinging = true;
+    document.getElementById('singBtn').classList.add('playing');
+    document.getElementById('singLabel').textContent = '停止';
+    currentLine = -1;
+    startPlayback();
+  }
+}
+
+function toggleSpeed() {
+  speed = speed === 1 ? 0.65 : 1;
+  var badge = document.getElementById('speedBadge');
+  badge.textContent = speed === 1 ? '1×' : '0.65×';
+  badge.className = speed < 1 ? 'speed-badge slow' : 'speed-badge';
+  var h = document.getElementById('hint');
+  h.textContent = speed < 1 ? '🐢 慢速練習模式' : '⚡ 正常速度';
+  h.classList.add('show');
+  setTimeout(function(){ h.classList.remove('show'); }, 2500);
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.classList.contains('word'))
+    document.getElementById('tooltip').classList.remove('show');
+});
+
+init();
+</script>
+
+</body>
+</html>
